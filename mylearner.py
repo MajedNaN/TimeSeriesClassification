@@ -28,9 +28,15 @@ class ToTensor:
 
 
 class MyLearner:
-    def __init__(self,X,y,model,splits,bs = 64, num_workers = 0,lr=0.001,tfms = None,epochs = 10,device = None,loss_func=nn.BCELoss,optimizer=optim.Adam):
-        self.tsets = MyDataSet(X[splits[0]], y[splits[0]], transform=tfms) #train dataset
-        self.vsets = MyDataSet(X[splits[1]], y[splits[1]], transform=tfms) #valid dataset
+    def __init__(self,X,y,model,splits,bs = 64,stand_mode=1, num_workers = 0,lr=0.001,tfms = None,epochs = 10,device = None,loss_func=nn.BCELoss,optimizer=optim.Adam):
+        
+        X_train,p1,p2 = standardize(X[splits[0]],stand_mode)
+        if stand_mode == 1:
+            X_valid = standardize_with_params(X[splits[1]],mean=p1,std=p2)
+        elif stand_mode == 1:
+            X_valid = standardize_with_params(X[splits[1]],min=p1,max=p2)
+        self.tsets = MyDataSet(X_train, y[splits[0]], transform=tfms) #train dataset
+        self.vsets = MyDataSet(X_valid, y[splits[1]], transform=tfms) #valid dataset
         self.tls = DataLoader(self.tsets, batch_size=bs, shuffle=False, num_workers=num_workers)
         self.vls = DataLoader(self.vsets, batch_size=bs, shuffle=False, num_workers=num_workers)
         
