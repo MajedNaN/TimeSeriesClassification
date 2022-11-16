@@ -3,10 +3,44 @@ from imports import *
 # standardize function *****************
 # *******************************
 
-def standardize(x,**k):
+def standardize(x,mode=0):
+    
+    size = x.shape[1]
+    if mode==1: #normalize
+        if x.ndim == 3: ### in case of segments
+            mean = []
+            std = []
+            for i in range(size):
+                mean.append(np.unique(x[:,i,:]).mean())
+                std.append(np.unique(x[:,i,:]).std())
+            x=(x-np.array(mean).reshape(1,size,1))/np.array(std).reshape(1,size,1) # to be applied tp features correctly
+
+        elif x.ndim == 2: ### in case of data before segmentation
+            mean = x.mean(axis=0)
+            std = x.std(axis=0)
+            x=(x-mean.reshape(1,size))/std.reshape(1,size)
+        return x.astype(np.float32),mean,std
+    elif mode==2: #minmax
+        if x.ndim == 3:
+            min = []
+            max = []
+            for i in range(size):
+                min.append(np.unique(x[:,i,:]).min())
+                max.append(np.unique(x[:,i,:]).max())
+            x=(x-np.array(min).reshape(1,size,1))/((np.array(max)-np.array(min)).reshape(1,size,1)) 
+
+        elif x.ndim == 2:
+            min = x.min(axis=0)
+            max = x.max(axis=0)
+            x=(x-min.reshape(1,size))/((max-min).reshape(1,size) )
+
+        return x.astype(np.float32),min,max
+    return x.astype(np.float32)
+
+def standardize_with_params(x,**k):
     if len(k)==2:
         size = x.shape[1]
-        if 'mean' in k and 'std' in k: #standard
+        if 'mean' in k and 'std' in k: #normalize
             mean = k['mean']
             std = k['std']
             if x.ndim == 3: ### in case of segments
@@ -82,10 +116,10 @@ def sliding(window,stride,features,targets,start=0):
 # *******************************
 
 
-def under_sample(data, size ,seq_len,stride,standardize=0):
+def under_sample(data, size ,seq_len,stride):
     x_list = []
     y_list = []
-    f_list = [] # for standardizing the whole data before segmentation
+
    
     data.reset_index(drop=True,inplace = True)
     lc = data[(data.loc[:,'person']>0) | (data.loc[:,'window_open']>0)]
@@ -99,10 +133,7 @@ def under_sample(data, size ,seq_len,stride,standardize=0):
             window = data.iloc[left-size : left+size+1]
         #get features,targets for sliding
         f = window.drop(columns = ['person','window_open'])
-        t = window.filter(['person','window_open'])
-
-        f_list.append(f.to_numpy(dtype = float))
-      
+        t = window.filter(['person','window_open'])      
 
 
         _x,_y = sliding(seq_len,stride,f,t)
@@ -123,26 +154,12 @@ def under_sample(data, size ,seq_len,stride,standardize=0):
     # convert lists to correct shape  for segmentation and standardization
     X = x_list[0]
     y = y_list[0]
-    feat = f_list[0]
 
     for i in range(1,len(x_list)):
         X= concat(X,x_list[i])
         y= concat(y,y_list[i])
-    for i in range(1,len(f_list)):
-        feat = concat(feat,f_list[i])
-    
-    
-    # standardize the whole data, apply params later to segments
-    if standardize == 1:
-        mean = feat.mean(axis=0)
-        std = feat.std(axis=0)
-        return X,y,mean,std
-    elif standardize == 2:
-        min = feat.min(axis=0)
-        max = feat.max(axis=0)
-        return X,y,min,max
-    else:
-        return X,y
+
+    return X,y
     
 # ****************************
 # plot confusion matrix function *****************
