@@ -3,7 +3,7 @@ from imports import *
 # standardize function *****************
 # *******************************
 
-def standardize(x,mode=0):
+def standardize(x,mode=1):
     
     size = x.shape[1]
     if mode==1: #normalize
