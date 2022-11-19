@@ -142,7 +142,7 @@ def under_sample(data, size ,seq_len,stride):
         t = window.filter(['person','window_open'])      
 
 
-        _x,_y = sliding(seq_len,stride,f,t)
+        _x,_y = sliding(seq_len,stride,f,t,mode='end')
         x_list.append(_x)
         y_list.append(_y)
         
