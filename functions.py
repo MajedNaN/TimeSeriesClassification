@@ -60,7 +60,7 @@ def standardize_with_params(x,**k):
 # sliding function *****************
 # *******************************
 
-def sliding(window,stride,features,targets,start=0):
+def sliding(window,stride,features,targets,mode='end',start=0):
 
     x = []
     y = []
@@ -69,13 +69,19 @@ def sliding(window,stride,features,targets,start=0):
     length = window + i
     size = features.shape[0]
     while  length <= size :
-        x.append(features.iloc[i:i+window].values.tolist())
-        y.append(targets.iloc[i])
+        x.append(features.iloc[i:length].values.tolist())
+        if mode == 'start':
+            y.append(targets.iloc[i])
+        elif mode == 'end':
+            y.append(targets.iloc[length-1])
+        elif mode == 'mean':
+            y.append(np.array(targets.iloc[i:length]).mean(axis=0).round())
         i += stride
         length = window + i
         count += 1
     x = np.array(x,dtype=np.float32)#.reshape((count,features.shape[1], window))
     x = np.transpose(x, (0, 2, 1)) ## to have correct segmentation shape (#samples,#features,seq_len)
+
     ### to be compatible with torch
     try:
         sh = targets.shape[1]
