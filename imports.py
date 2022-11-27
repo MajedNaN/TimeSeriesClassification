@@ -12,6 +12,6 @@ import seaborn as sns
 from random import shuffle
 from tsai.all import *
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import confusion_matrix,f1_score
-from sklearn.preprocessing import StandardScaler,MinMaxScaler
+from sklearn.metrics import confusion_matrix,f1_score,precision_score,recall_score
+from sklearn.preprocessing import StandardScaler,MinMaxScaler,RobustScaler
 
