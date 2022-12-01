@@ -122,7 +122,7 @@ def sliding(window,stride,features,targets,mode='end',start=0):
 # *******************************
 
 
-def under_sample(data, size ,seq_len,stride,standardize_mode='end'):
+def under_sample(data, size ,seq_len,stride,sliding_mode='end'):
     x_list = []
     y_list = []
 
@@ -142,7 +142,7 @@ def under_sample(data, size ,seq_len,stride,standardize_mode='end'):
         t = window.filter(['person','window_open'])      
 
 
-        _x,_y = sliding(seq_len,stride,f,t,mode=standardize_mode)
+        _x,_y = sliding(seq_len,stride,f,t,mode=sliding_mode)
         x_list.append(_x)
         y_list.append(_y)
         

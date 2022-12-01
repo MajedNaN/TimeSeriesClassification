@@ -1,0 +1,16 @@
+---
+sample_segment: 
+  under_window:  30
+  seq_len:  7
+  stride:  1
+  sliding_mode:  mean
+
+model:  
+  epochs:  30
+  bs:  32
+  num_workers: 2
+
+optuna:
+  epochs: 30
+  trials: 100
+

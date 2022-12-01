@@ -33,7 +33,7 @@ class ConvNet(Module):
 ###################################################################################3
 
 class MyFCN(FCN):
-    def __init__(self, c_in, c_out, layers=[16,16], kss=[5,3]):
+    def __init__(self, c_in, c_out, layers=[16,32], kss=[5,3]):
         assert len(layers) == len(kss)
         self.convblock1 = ConvBlock(c_in, layers[0], kss[0],padding=(0,))
         self.convblock2 = ConvBlock(layers[0], layers[1], kss[1],padding=(0,))
