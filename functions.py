@@ -190,9 +190,64 @@ def plot_confusion(y_true,y_pred,n_classes,name):
     ax.set_xlabel('\nPredicted Classes')
     ax.set_ylabel('Actual Classes ');
 
-## Ticket labels - List must be in alphabetical order
-    # ax.xaxis.set_ticklabels(['Not Setting','Setting']) ### names of classes starting from 0
-    # ax.yaxis.set_ticklabels(['Not Setting','Setting'])
+# Ticket labels - List must be in alphabetical order
+    if name == 'person':
+        ax.xaxis.set_ticklabels(['No person','People']) ### names of classes starting from 0
+        ax.yaxis.set_ticklabels(['No person','People'])
+    elif name == 'window':
+        ax.xaxis.set_ticklabels(['Closed','Open']) ### names of classes starting from 0
+        ax.yaxis.set_ticklabels(['Closed','Open'])
 
 ## Display the visualization of the Confusion Matrix.
     plt.show()
+
+###################################################################
+### plot distribution of targets vs predictions in a given test set
+def plot_distribution(y_true,y_pred,name):
+    plt.figure(figsize=(10,4))
+
+    if name == 'person': 
+        plt.scatter(range(1,y_pred.shape[0]+1),y_pred,marker = '.', label='Predictions')
+        plt.scatter(range(1,y_true.shape[0]+1),y_true,marker = '.',label='Targets')
+
+        plt.yticks([0,1],['No person','People'])
+    elif name == 'window': 
+        plt.scatter(range(1,y_pred.shape[0]+1),y_pred,marker = '.', label='Predictions')
+        plt.scatter(range(1,y_true.shape[0]+1),y_true,marker = '.',label='Targets')
+        plt.yticks([0,1],['Closed','Open'])
+
+    plt.title(f'distribution of wrong prediction of class {name}')
+    plt.xlabel('Timeline')
+    plt.legend()
+    plt.show()
+
+###################################################################
+### plot distribution of FP, FN in a given test set
+
+### false positives
+def plot_fp_fn(y_true,y_pred,name):
+    ### false positives
+    fp = (y_true==False) & (y_pred==True)
+    fp_indices = torch.where(fp == True)[0]
+    fp = np.ones(len(fp_indices)) ## to plot it
+
+    ### false negatives
+    fn = (y_true==True) & (y_pred==False)
+    fn_indices = torch.where(fn == True)[0]
+    fn = np.zeros(len(fn_indices)) ## to plot it
+
+    plt.figure(figsize=(10,4))
+    
+    plt.scatter(fp_indices+1,fp,marker = 'x',c='blue')
+    plt.scatter(fn_indices+1,fn,marker = 'x',c='blue')
+
+    plt.title(f'distribution of FP, FN of class {name}')
+    plt.yticks([0,1],['FN','FP'])
+    
+    x1= fp_indices+1
+    x2 = fn_indices+1
+    plt.xticks(torch.range(torch.min(torch.cat((x1,x2))), torch.max(torch.cat((x1,x2)))+1, 1.0),labels =[])
+    plt.xlabel('Timeline [frequency = 1]')
+
+    plt.show()
+    #################################################################################
