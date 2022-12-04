@@ -238,15 +238,15 @@ def plot_fp_fn(y_true,y_pred,name):
 
     plt.figure(figsize=(10,4))
     
-    plt.scatter(fp_indices+1,fp,marker = 'x',c='blue')
-    plt.scatter(fn_indices+1,fn,marker = 'x',c='blue')
+    plt.scatter(fp_indices+1,fp,marker = '.',c='blue')
+    plt.scatter(fn_indices+1,fn,marker = '.',c='blue')
 
     plt.title(f'distribution of FP, FN of class {name}')
     plt.yticks([0,1],['FN','FP'])
     
-    x1= fp_indices+1
-    x2 = fn_indices+1
-    plt.xticks(torch.range(torch.min(torch.cat((x1,x2))), torch.max(torch.cat((x1,x2)))+1, 1.0),labels =[])
+    x1= (fp_indices+1).tolist()
+    x2 = (fn_indices+1).tolist()
+    plt.xticks(range(min(x1+x2), max(x1+x2)+1, 1),labels =[])
     plt.xlabel('Timeline [frequency = 1]')
 
     plt.show()
