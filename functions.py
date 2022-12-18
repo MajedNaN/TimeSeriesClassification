@@ -21,6 +21,32 @@ def normalized_kl(p,q): #normalized KL
     return (1-norm_kl)    ### reverse values to represent a score
 
 # ****************************
+# Ploting PR curve function *****************
+# *******************************
+def plot_PR_curve(class_name,y_true,y_probas):
+    class_name = class_name
+
+    precision, recall, thresholds = precision_recall_curve(y_true, y_probas)
+    # convert to f score
+    fscore = (2 * precision * recall) / (precision + recall)
+    # locate the index of the largest f score
+    ix = np.argmax(fscore)
+    print('Best Threshold=%f, F-Score=%.3f' % (thresholds[ix], fscore[ix]))
+    # plot the roc curve for the model
+
+    plt.figure()
+    plt.plot(recall, precision, marker='.', label=f'PR-curve of class {class_name}')
+    plt.scatter(recall[ix], precision[ix], marker='o', color='red', label='best threshold')
+    plt.annotate(f'{thresholds[ix]:.4f}',xy = (recall[ix]-0.2, precision[ix]-0.1), color='red')
+    # axis labels
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.legend()
+    # show the plot
+    plt.show()
+    return thresholds[ix], fscore[ix]
+
+# ****************************
 # standardize function *****************
 # *******************************
 
