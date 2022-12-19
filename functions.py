@@ -31,8 +31,7 @@ def plot_PR_curve(class_name,y_true,y_probas):
     fscore = (2 * precision * recall) / (precision + recall)
     # locate the index of the largest f score
     ix = np.argmax(fscore)
-    print('Best Threshold=%f, F-Score=%.3f' % (thresholds[ix], fscore[ix]))
-    # plot the roc curve for the model
+    print('Best Threshold=%f, F1-Score=%.3f' % (thresholds[ix], fscore[ix]))
 
     plt.figure()
     plt.plot(recall, precision, marker='.', label=f'PR-curve of class {class_name}')
