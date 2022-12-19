@@ -46,6 +46,99 @@ def plot_PR_curve(class_name,y_true,y_probas):
     return thresholds[ix], fscore[ix]
 
 # ****************************
+# visualize embeddings using sklearn and plotly *****************
+# *******************************
+def visualize_embeddings(features, person_labels, window_labels,n_components = 2, method = 'pca'):
+    #### normalize
+    # features = StandardScaler().fit_transform(features)
+
+    if method == 'tsne':
+        tsne = TSNE(n_components = n_components)
+        components = tsne.fit_transform(features)
+        name = 't-SNE'
+    elif method == 'pca':
+        pca = PCA(n_components = n_components)
+        components = pca.fit_transform(features)
+        total_var = pca.explained_variance_ratio_.sum() * 100
+        name = 'PCA'
+
+    if n_components == 2:
+        ### class person
+        fig = px.scatter(components, x=0, y=1, color=person_labels,
+            # title=f'Total Explained Variance: {total_var:.2f}',
+            labels={'0': 'x', '1': 'y'}
+        )
+        fig.update_layout(
+            title={
+                'text': f'{name} of class person',
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+        fig.show()
+        ### class window
+        fig = px.scatter(components, x=0, y=1, color=window_labels,
+            # title=f'Total Explained Variance: {total_var:.2f}',
+            labels={'0': 'x', '1': 'y'}
+        )
+        fig.update_layout(
+            title={
+                'text': f'{name} of class window',
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+        fig.show()
+
+
+    elif n_components == 3:
+        ### class person
+        fig = px.scatter_3d(
+            components, x=0, y=1, z=2, color=person_labels,
+            # title=f'Total Explained Variance: {total_var:.2f}',
+            labels={'0': 'x', '1': 'y', '2': 'z'}
+        )
+        fig.update_layout(
+            title={
+                'text': f'{name} of class person',
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+        fig.show()
+        ### class window
+        fig = px.scatter_3d(
+            components, x=0, y=1, z=2, color=window_labels,
+            # title=f'Total Explained Variance: {total_var:.2f}',
+            labels={'0': 'x', '1': 'y', '2': 'z'}
+        )
+        fig.update_layout(
+            title={
+                'text': f'{name} of class window',
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+        fig.show()
+    else:
+        print('Can only visualize in 2D and 3D !')
+        return
+
+    #####################################################################
+    ### matplotlib for person class
+    # plt.figure()
+    # for label in range(2):
+    #     indices = test_lbls[:,0]==label  ###test_lbls are 0s and 1s
+    #     plt.scatter(components[indices,0],components[indices,1], label = person_dict[label])
+    # plt.xlabel('PC1')
+    # plt.ylabel('PC2')
+    # plt.legend()
+    # plt.show()
+
+    return components
+
+
+# ****************************
 # standardize function *****************
 # *******************************
 
