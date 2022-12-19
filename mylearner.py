@@ -121,7 +121,8 @@ class MyLearner:
         # for window
         yw_true = []
         yw_pred = []
-
+        
+        self.model.eval()
         with torch.no_grad():
             n_correct = 0
             n_samples = 0

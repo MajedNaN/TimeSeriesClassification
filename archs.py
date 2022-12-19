@@ -49,7 +49,22 @@ class MyFCN(FCN):
         out = self.fc(x)
         # out = nn.Sigmoid()(out) # do not use if loss function includes the sigmoid
         return out
-
+#####################################################################################
+class MyFCN_body(MyFCN):
+    def __init__(self, c_in, c_out, layers=[16,32], kss=[5,3]):
+        assert len(layers) == len(kss)
+        self.convblock1 = ConvBlock(c_in, layers[0], kss[0],padding=(0,))
+        self.convblock2 = ConvBlock(layers[0], layers[1], kss[1],padding=(0,))
+        # self.convblock3 = ConvBlock(layers[1], layers[2], kss[2],padding=(0,))
+        self.gap = GAP1d(1)
+        
+    def forward(self, x):
+        x = self.convblock1(x)
+        x = self.convblock2(x)
+        # x = self.convblock3(x)
+        out = self.gap(x)
+        return out
+#####################################################################################
 # class MyFCN(FCN):
 #     def __init__(self,c_in, c_out, layers=[128, 256, 128], kss=[7, 5, 3]):
 #         # super(MyFCN,self).__init__(c_in, c_out, layers, kss)
@@ -69,7 +84,32 @@ class MyFCN(FCN):
 #         out = nn.Sigmoid()(out) # do not use if loss function includes the sigmoid
 #         return out
 ###################################################################################3
+class LSTM_body(LSTM):
+    def __init__(self, c_in, c_out, hidden_size=100, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
+        self.rnn = self._cell(c_in, hidden_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+                              bidirectional=bidirectional)
+        if init_weights: self.apply(self._weights_init)
+        
+    def _weights_init(self, m): 
+        for name, params in m.named_parameters():
+            if "weight_ih" in name: 
+                nn.init.xavier_normal_(params)
+            elif 'weight_hh' in name: 
+                nn.init.orthogonal_(params)
+            elif 'bias_ih' in name:
+                params.data.fill_(0)
+                # Set forget-gate bias to 1
+                n = params.size(0)
+                params.data[(n // 4):(n // 2)].fill_(1)
+            elif 'bias_hh' in name:
+                params.data.fill_(0)
 
+    def forward(self, x): 
+        x = x.transpose(2,1)    # [batch_size x n_vars x seq_len] --> [batch_size x seq_len x n_vars]
+        output, _ = self.rnn(x) # output from all sequence steps: [batch_size x seq_len x hidden_size * (1 + bidirectional)]
+        output = output[:, -1]  # output from last sequence step : [batch_size x hidden_size * (1 + bidirectional)]
+        return output
+##################################################################################
 class MyLSTM(LSTM):
     def forward(self, x): 
         x = x.transpose(2,1)    # [batch_size x n_vars x seq_len] --> [batch_size x seq_len x n_vars]
