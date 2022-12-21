@@ -3,7 +3,7 @@ from imports import *
 # ****************************
 # weighted normalized kullback leibler divergence *****************
 # *******************************
-def normalized_kl(p,q): #normalized KL
+def normalized_kl(p,q,weight = 0.1): #normalized KL
 
     # Should be probabilities 
     p = p / torch.sum(p) 
@@ -15,7 +15,7 @@ def normalized_kl(p,q): #normalized KL
     p = p+epsilon
     q = q+epsilon
 
-    kl = 0.1 *  torch.sum(p*torch.log(p/q)) ## weighted distance 
+    kl = weight *  torch.sum(p*torch.log(p/q)) ## weighted distance 
     norm_kl = 1 - torch.exp(-1*kl) ## between '0':min distance, '1':max distance
     
     return (1-norm_kl)    ### reverse values to represent a score
