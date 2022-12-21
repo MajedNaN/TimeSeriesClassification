@@ -385,8 +385,10 @@ def plot_fp_fn(y_true,y_pred,name):
     
     x1= (fp_indices+1).tolist()
     x2 = (fn_indices+1).tolist()
-    plt.xticks(range(min(x1+x2), max(x1+x2)+1, 1),labels =[])
-    plt.xlabel('Timeline [frequency = 1]')
+
+    if len(x1)!= 0 or len(x2)!=0:
+        plt.xticks(range(min(x1+x2), max(x1+x2)+1, 1),labels =[])
+        plt.xlabel('Timeline [frequency = 1]')
 
     plt.show()
     #################################################################################
