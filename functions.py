@@ -1,6 +1,20 @@
 from imports import *
 
 # ****************************
+# freezing/unfreezing layers except head*****************
+# *******************************
+def freeze(learn):
+  assert hasattr(learn.model, "head"), f"you can only use this with models that have .head attribute"
+  for p in learn.model.parameters():
+    p.requires_grad=False
+  for p in learn.model.head.parameters():
+    p.requires_grad=True
+
+def unfreeze(learn):
+  for p in learn.model.parameters():
+    p.requires_grad=True
+
+# ****************************
 # predict autoencoder *****************
 # *******************************
 def predict_autoencoder(model, test_dls):
