@@ -1,5 +1,7 @@
 from imports import *
 
+
+######################################################################################
 class Encoder(Module):
     def __init__ (self,c_in, embed_size = 3, hidden_size=100,nf=32,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
 
@@ -79,14 +81,41 @@ class Decoder(Module):
 #########################################################################################
 class AutoEncoder(Module):
   def __init__(self,c_in,embed_size = 3, hidden_size=100,nf=32,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
-    
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    self.encoder = Encoder(c_in).to(device)
-    self.decoder = Decoder(c_in).to(device)
+    self.encoder = Encoder(c_in,embed_size , hidden_size,nf,kernel_size, n_layers, bias, rnn_dropout, bidirectional, init_weights).to(device)
+    self.decoder = Decoder(c_in,embed_size , hidden_size,nf,kernel_size, n_layers, bias, rnn_dropout, bidirectional, init_weights).to(device)
   def forward(self, x):
     x = self.encoder(x)
     x = self.decoder(x)
     return x
+
+    ####################################################################
+class ShallowClassifier(Module):
+    def __init__(self,c_in,c_out,n_neurons=20,fc_dropout=0):
+        self.fc1 = nn.Linear(c_in, n_neurons, bias=True) 
+        torch.nn.init.xavier_uniform(self.fc1.weight)
+        self.linear = nn.Sequential(
+                        self.fc1,
+                        torch.nn.ReLU(),
+                        torch.nn.Dropout(fc_dropout)
+                        )
+        self.fc2 = nn.Linear(n_neurons,c_out)
+        torch.nn.init.xavier_uniform_(self.fc2.weight)
+    def forward(self, x):
+        x = x[:,-1]
+        x = self.linear(x)
+        out = self.fc2(x)
+        return out
+####################################################################################
+class EncoderClassifier(Module):
+    def __init__(self,c_in,c_out,encoder,n_neurons=20,fc_dropout=0,embed_size = 3):
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.body = encoder.to(device)
+        self.head = ShallowClassifier(embed_size,c_out,n_neurons,fc_dropout).to(device)
+    def forward(self, x):
+        x = self.body(x)
+        x = self.head(x)
+        return x
 ############################################################################################
 class ConvNet(Module):
     
