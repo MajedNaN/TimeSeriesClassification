@@ -20,6 +20,8 @@ from yaml.loader import SafeLoader
 import optuna
 from optuna.integration import FastAIPruningCallback
 from fastai.callback.tracker import EarlyStoppingCallback
+import torch.nn.functional as F
+from copy import deepcopy
 
 from sklearn.decomposition import PCA
 import plotly.express as px
