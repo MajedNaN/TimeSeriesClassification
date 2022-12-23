@@ -4,70 +4,72 @@ from imports import *
 # freezing/unfreezing layers except head*****************
 # *******************************
 def freeze(learn):
-  assert hasattr(learn.model, "head"), f"you can only use this with models that have .head attribute"
-  for p in learn.model.parameters():
-    p.requires_grad=False
-  for p in learn.model.head.parameters():
-    p.requires_grad=True
+    assert hasattr(learn.model, "head"), f"you can only use this with models that have .head attribute"
+    for p in learn.model.parameters():
+        p.requires_grad=False
+    for p in learn.model.head.parameters():
+        p.requires_grad=True
 
 def unfreeze(learn):
-  for p in learn.model.parameters():
-    p.requires_grad=True
+    for p in learn.model.parameters():
+        p.requires_grad=True
 
 # ****************************
 # predict autoencoder *****************
 # *******************************
 def predict_autoencoder(model, test_dls):
-  predictions, losses = [], []
-  criterion = nn.MSELoss().to(device)
-  with torch.no_grad():
-    model = model.eval()
-    for seq_true in test_dls:
-      seq_true = seq_true[0].to(device)
-      seq_pred = model(seq_true)
-      loss = criterion(seq_pred, seq_true)
-      predictions.append(seq_pred)
-      losses.append(loss.item())
-    predictions = torch.cat(predictions).detach().cpu().numpy()
-  return predictions, losses
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    predictions, losses = [], []
+    criterion = nn.MSELoss().to(device)
+    with torch.no_grad():
+        model = model.eval()
+        for seq_true in test_dls:
+            seq_true = seq_true[0].to(device)
+            seq_pred = model(seq_true)
+            loss = criterion(seq_pred, seq_true)
+            predictions.append(seq_pred)
+            losses.append(loss.item())
+        predictions = torch.cat(predictions).detach().cpu().numpy()
+    return predictions, losses
 # ****************************
 # train autoencoder *****************
 # *******************************
 def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
-  optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-  criterion = nn.MSELoss().to(device)
-  history = dict(train=[], val=[])
-  best_model_wts = deepcopy(model.state_dict())
-  best_loss = 10000.0
-  for epoch in range(1, n_epochs + 1):
-    model = model.train()
-    train_losses = []
-    for seq_true in train_dls:
-      optimizer.zero_grad()
-      seq_true = seq_true[0].to(device)
-      seq_pred = model(seq_true)
-      loss = criterion(seq_pred, seq_true)
-      loss.backward()
-      optimizer.step()
-      train_losses.append(loss.item())
-    val_losses = []
-    model = model.eval()
-    with torch.no_grad():
-      for seq_true in val_dls:
-        seq_true = seq_true[0].to(device)
-        seq_pred = model(seq_true)
-        loss = criterion(seq_pred, seq_true)
-        val_losses.append(loss.item())
-    train_loss = np.mean(train_losses)
-    val_loss = np.mean(val_losses)
-    history['train'].append(train_loss)
-    history['val'].append(val_loss)
-    if val_loss < best_loss:
-      best_loss = val_loss
-      best_model_wts = deepcopy(model.state_dict())
-    print(f'Epoch {epoch}: train loss {train_loss} val loss {val_loss}')
-  model.load_state_dict(best_model_wts)
-  return model.eval(), history
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    criterion = nn.MSELoss().to(device)
+    history = dict(train=[], val=[])
+    best_model_wts = deepcopy(model.state_dict())
+    best_loss = 10000.0
+    for epoch in range(1, n_epochs + 1):
+        model = model.train()
+        train_losses = []
+        for seq_true in train_dls:
+            optimizer.zero_grad()
+            seq_true = seq_true[0].to(device)
+            seq_pred = model(seq_true)
+            loss = criterion(seq_pred, seq_true)
+            loss.backward()
+            optimizer.step()
+            train_losses.append(loss.item())
+        val_losses = []
+        model = model.eval()
+        with torch.no_grad():
+            for seq_true in val_dls:
+                seq_true = seq_true[0].to(device)
+                seq_pred = model(seq_true)
+                loss = criterion(seq_pred, seq_true)
+                val_losses.append(loss.item())
+        train_loss = np.mean(train_losses)
+        val_loss = np.mean(val_losses)
+        history['train'].append(train_loss)
+        history['val'].append(val_loss)
+        if val_loss < best_loss:
+            best_loss = val_loss
+            best_model_wts = deepcopy(model.state_dict())
+        print(f'Epoch {epoch}: train loss {train_loss} val loss {val_loss}')
+    model.load_state_dict(best_model_wts)
+    return model.eval(), history
 
 # ****************************
 # weighted normalized kullback leibler divergence *****************
@@ -96,6 +98,11 @@ def plot_PR_curve(class_name,y_true,y_probas):
     class_name = class_name
 
     precision, recall, thresholds = precision_recall_curve(y_true, y_probas)
+
+    ### replace zero precision and zero recall at same time to avoid infinity fscore 
+    zero_indices = np.where(((precision==0)==True) & ((recall==0)==True) == True)[0].tolist()
+    precision[zero_indices] = 0.00001
+    recall[zero_indices] = 0.00001
     # convert to f score
     fscore = (2 * precision * recall) / (precision + recall)
     # locate the index of the largest f score
