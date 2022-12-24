@@ -36,7 +36,7 @@ class Encoder(Module):
         x, (hn,_) = self.rnn2(x)
         # x = x[:, -1]  # output from last sequence step : [batch_size x hidden_size * (1 + bidirectional)]
         # x = out.view(out.shape[0],1,out.shape[1])  ### [batch_size x 1 x hidden_size * (1 + bidirectional)]
-        return x   ### or return hn.transpose(1,0) -> shape (1,embed_size)
+        return x   ### or return hn.transpose(1,0) -> shape (n_layers=1,embed_size)
 #####################################################################################
 
 class Decoder(Module):
