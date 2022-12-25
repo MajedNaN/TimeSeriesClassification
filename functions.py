@@ -1,23 +1,28 @@
 from imports import *
 
-# ****************************
-# freezing/unfreezing layers except head*****************
 # *******************************
 def freeze(learn):
+    '''
+    freezing layers except head
+    '''
     assert hasattr(learn.model, "head"), f"you can only use this with models that have .head attribute"
     for p in learn.model.parameters():
         p.requires_grad=False
     for p in learn.model.head.parameters():
         p.requires_grad=True
-
+# *******************************
 def unfreeze(learn):
+    '''
+    unfreezing layers 
+    '''
     for p in learn.model.parameters():
         p.requires_grad=True
 
-# ****************************
-# predict autoencoder *****************
 # *******************************
 def predict_autoencoder(model, test_dls):
+    '''
+    predict autoencoder
+    '''
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     predictions, losses = [], []
     criterion = nn.MSELoss().to(device)
@@ -31,10 +36,13 @@ def predict_autoencoder(model, test_dls):
             losses.append(loss.item())
         predictions = torch.cat(predictions).detach().cpu().numpy()
     return predictions, losses
-# ****************************
-# train autoencoder *****************
+
 # *******************************
 def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
+    '''
+    train autoencoder
+    '''
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss().to(device)
@@ -71,11 +79,11 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
     model.load_state_dict(best_model_wts)
     return model.eval(), history
 
-# ****************************
-# weighted normalized kullback leibler divergence *****************
 # *******************************
 def normalized_kl(p,q,weight = 0.1): #normalized KL
-
+    '''
+    weighted normalized kullback leibler divergence
+    '''
     # Should be probabilities 
     p = p / torch.sum(p) 
     q = q/ torch.sum(q)
@@ -91,10 +99,11 @@ def normalized_kl(p,q,weight = 0.1): #normalized KL
     
     return (1-norm_kl)    ### reverse values to represent a score
 
-# ****************************
-# Ploting PR curve function *****************
 # *******************************
 def plot_PR_curve(class_name,y_true,y_probas):
+    '''
+    Ploting PR curve function
+    '''
     class_name = class_name
 
     precision, recall, thresholds = precision_recall_curve(y_true, y_probas)
@@ -121,10 +130,13 @@ def plot_PR_curve(class_name,y_true,y_probas):
     plt.show()
     return thresholds[ix], fscore[ix]
 
-# ****************************
-# visualize embeddings using sklearn and plotly *****************
+
 # *******************************
 def visualize_embeddings(features, person_labels, window_labels,n_components = 2, method = 'pca'):
+    '''
+    visualize embeddings using sklearn and plotly
+    '''
+
     #### normalize
     # features = StandardScaler().fit_transform(features)
 
@@ -213,13 +225,13 @@ def visualize_embeddings(features, person_labels, window_labels,n_components = 2
 
     return components
 
-
-# ****************************
-# standardize function *****************
 # *******************************
 
 def standardize(x,mode=1):
-    
+    '''
+    standardize function
+    '''
+
     size = x.shape[1]
     if mode==1: #normalize
         if x.ndim == 3: ### in case of segments
@@ -253,6 +265,10 @@ def standardize(x,mode=1):
     return x.astype(np.float32)
 
 def standardize_with_params(x,**k):
+    '''
+    standardize with parameters
+    '''
+
     if len(k)==2:
         size = x.shape[1]
         if 'mean' in k and 'std' in k: #normalize
@@ -271,12 +287,12 @@ def standardize_with_params(x,**k):
                 x=(x-np.array(min).reshape(1,size))/((np.array(max)-np.array(min)).reshape(1,size) )
     return x.astype(np.float32)
 
-# ****************************
-# sliding function *****************
 # *******************************
 
 def sliding(window,stride,features,targets,mode='end',start=0):
-
+    '''
+    sliding function
+    '''
     x = []
     y = []
     count = 0
@@ -330,14 +346,13 @@ def sliding(window,stride,features,targets,mode='end',start=0):
 #     y = np.array(y,dtype=np.int)#reshape(-1)
 #     return x,y
 
-
-
-# ****************************
-# under sampling function *****************
 # *******************************
 
-
 def under_sample(data, size ,seq_len,stride,sliding_mode='end'):
+    '''
+    under sampling function
+    '''
+
     x_list = []
     y_list = []
 
@@ -382,11 +397,13 @@ def under_sample(data, size ,seq_len,stride,sliding_mode='end'):
 
     return X,y
     
-# ****************************
-# plot confusion matrix function *****************
 # *******************************
 
 def plot_confusion(y_true,y_pred,n_classes,name):
+    '''
+    plot confusion matrix function
+    '''
+
     cf_matrix=confusion_matrix(y_true,y_pred)
 
 
@@ -416,9 +433,12 @@ def plot_confusion(y_true,y_pred,n_classes,name):
 ## Display the visualization of the Confusion Matrix.
     plt.show()
 
-###################################################################
-### plot distribution of targets vs predictions in a given test set
+#******************************************
 def plot_distribution(y_true,y_pred,name):
+    '''
+    plot distribution of targets vs predictions in a given test set
+    '''
+
     plt.figure(figsize=(10,4))
 
     if name == 'person': 
@@ -436,11 +456,13 @@ def plot_distribution(y_true,y_pred,name):
     plt.legend()
     plt.show()
 
-###################################################################
-### plot distribution of FP, FN in a given test set
+#*************************************************
 
-### false positives
 def plot_fp_fn(y_true,y_pred,name):
+    '''
+    plot distribution of FP, FN in a given test set
+    '''
+
     ### false positives
     fp = (y_true==False) & (y_pred==True)
     fp_indices = torch.where(fp == True)[0]
@@ -467,4 +489,4 @@ def plot_fp_fn(y_true,y_pred,name):
         plt.xlabel('Timeline [frequency = 1]')
 
     plt.show()
-    #################################################################################
+    #*******************************************
