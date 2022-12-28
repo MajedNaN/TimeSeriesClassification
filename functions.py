@@ -1,6 +1,50 @@
 from imports import *
 
+#******************************************
+def encode_classes(data):
+    '''Encode classes person and window into 0,1
+    '''
+    df = data.copy()
+    le = LabelEncoder()
+    labels = ['person','window_open']
+    for label in labels:
+        le.fit(df[label])
+        df[label]=le.transform(df[label])
+        print(df[label].value_counts())
+    print(df.shape)
+    return df
 # *******************************
+def plot_missing(df):
+    '''plot missing values
+    '''
+    missing = df.isnull().sum(0).reset_index()
+    missing.columns = ['column', 'count']
+
+    missing = missing.sort_values(by = 'count', ascending = False).loc[missing['count'] > 0]
+    missing['percentage'] = missing['count'] / float(df.shape[0]) * 100
+    ind = np.arange(missing.shape[0])
+    
+
+    fig, ax = plt.subplots()
+    rects = ax.barh(ind, missing.percentage.values, color='r')
+    ax.set_yticks(ind)
+    ax.set_yticklabels(missing.column.values, rotation='horizontal')
+    ax.set_xlabel("Precentage of missing values %")
+    # plt.grid(linestyle = '--')
+    plt.show()
+    print ('maximum number of missing values per column= ',missing['count'].max(),'\n')
+    print(missing)
+#**************************************
+def impute_NaN(df):
+    '''interpolate or drop NaN
+    '''
+    df.reset_index(drop=True,inplace=True)
+    df.interpolate(method='polynomial', order=1,inplace=True)
+    ## incase NaNs are at begining or end we drop those rows
+
+    df.dropna(axis=0,inplace=True)
+    df.reset_index(drop=True,inplace=True)
+#*************************************************
 def freeze(learn):
     '''
     freezing layers except head
