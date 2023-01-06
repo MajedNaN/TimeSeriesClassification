@@ -333,7 +333,7 @@ def standardize_with_params(x,**k):
 
 # *******************************
 
-def sliding(window,stride,features,targets,mode='end',start=0):
+def sliding(window,stride,features,targets=None,mode='end',start=0):
     '''
     sliding function
     '''
@@ -345,12 +345,13 @@ def sliding(window,stride,features,targets,mode='end',start=0):
     size = features.shape[0]
     while  length <= size :
         x.append(features.iloc[i:length].values.tolist())
-        if mode == 'start':
-            y.append(targets.iloc[i])
-        elif mode == 'end':
-            y.append(targets.iloc[length-1])
-        elif mode == 'mean':
-            y.append(np.array(targets.iloc[i:length]).mean(axis=0).round())
+        if targets is not None:
+            if mode == 'start':
+                y.append(targets.iloc[i])
+            elif mode == 'end':
+                y.append(targets.iloc[length-1])
+            elif mode == 'mean':
+                y.append(np.array(targets.iloc[i:length]).mean(axis=0).round())
         i += stride
         length = window + i
         count += 1
@@ -358,12 +359,14 @@ def sliding(window,stride,features,targets,mode='end',start=0):
     x = np.transpose(x, (0, 2, 1)) ## to have correct segmentation shape (#samples,#features,seq_len)
 
     ### to be compatible with torch
-    try:
-        sh = targets.shape[1]
-    except:
-        sh = 1
-    y = np.array(y,dtype=np.float32).reshape(-1,sh)
-    return x,y
+    if targets is not None:
+        try:
+            sh = targets.shape[1]
+        except:
+            sh = 1
+        y = np.array(y,dtype=np.float32).reshape(-1,sh)
+        return x,y
+    return x
 
 #### Grouping 0,1,2,... and stitching then slicing (destroys time series !!!)
 # def sliding(window,stride,features,target):
