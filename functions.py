@@ -1,4 +1,5 @@
 from imports import *
+from archs import *
 
 #******************************************
 def encode_classes(data):
@@ -506,8 +507,7 @@ def plot_distribution(y_true,y_pred,name):
 #*************************************************
 
 def plot_fp_fn(y_true,y_pred,name):
-    '''
-    plot distribution of FP, FN in a given test set
+    '''plot distribution of FP, FN in a given test set
     '''
 
     ### false positives
