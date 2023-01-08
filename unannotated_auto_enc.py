@@ -94,7 +94,7 @@ plt.title('Distribution of datset')
 # plt.xlabel('x')
 # plt.ylabel('y')
 ax.bar_label(bars)
-plt.savefig('distribution_auto_enc.png')
+plt.savefig(f'distribution_auto_enc.png_{seq_len}')
 
 ### plot train/valid losses
 plt.figure()
@@ -104,7 +104,7 @@ plt.plot(x,history['train'],label='train_loss')
 plt.plot(x,history['val'],label = 'valid_loss')
 plt.xlabel('epochs')
 plt.legend()
-plt.savefig('losses_auto_enc.png')
+plt.savefig(f'losses_auto_enc.png_{seq_len}')
 
 ##############predict for autoencoder##################
 # predictions, pred_losses = predict_autoencoder(autoencoder, dls.valid)
