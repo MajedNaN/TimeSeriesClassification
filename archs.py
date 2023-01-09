@@ -3,14 +3,14 @@ from imports import *
 
 ######################################################################################
 class Encoder(Module):
-    def __init__ (self,c_in, embed_size = 3, hidden_size=100,nf=32,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
+    def __init__ (self,c_in, embed_size = 2, hidden_size=100,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
 
             
         self.conv = ConvBlock(c_in, nf,kernel_size,padding= 0,act = nn.LeakyReLU)
         self.rnn1 = nn.LSTM(nf, hidden_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
                               bidirectional=bidirectional)
-        self.rnn2 = nn.LSTM(hidden_size, embed_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
-                              bidirectional=bidirectional)
+        self.rnn2 = nn.LSTM((1+bidirectional)*hidden_size, embed_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+                              bidirectional=False)
 
                 
         if init_weights: self.apply(self._weights_init)
@@ -40,7 +40,7 @@ class Encoder(Module):
 #####################################################################################
 
 class Decoder(Module):
-    def __init__ (self, c_out,embed_size = 3, hidden_size=100,nf=32,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
+    def __init__ (self, c_out,embed_size = 2, hidden_size=100,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
 
             
         # self.conv_len = conv_len
@@ -48,8 +48,8 @@ class Decoder(Module):
         # self.embed_size = embed_size
         self.rnn1 = nn.LSTM(embed_size, hidden_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
                               bidirectional=bidirectional)
-        self.rnn2 = nn.LSTM(hidden_size, nf, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
-                              bidirectional=bidirectional)
+        self.rnn2 = nn.LSTM((1+bidirectional)*hidden_size, nf, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+                              bidirectional=False)
         self.conv = nn.ConvTranspose1d(nf, c_out,kernel_size)
         # self.linear = nn.Linear(hidden_size, c_out)
                 
@@ -80,7 +80,7 @@ class Decoder(Module):
         return x
 #########################################################################################
 class AutoEncoder(Module):
-  def __init__(self,c_in,embed_size = 3, hidden_size=100,nf=32,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
+  def __init__(self,c_in,embed_size = 2, hidden_size=100,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     self.encoder = Encoder(c_in,embed_size , hidden_size,nf,kernel_size, n_layers, bias, rnn_dropout, bidirectional, init_weights).to(device)
     self.decoder = Decoder(c_in,embed_size , hidden_size,nf,kernel_size, n_layers, bias, rnn_dropout, bidirectional, init_weights).to(device)
@@ -91,7 +91,7 @@ class AutoEncoder(Module):
 
     ####################################################################
 class ShallowClassifier(Module):
-    def __init__(self,c_in,c_out,n_neurons=20,fc_dropout=0):
+    def __init__(self,c_in,c_out,n_neurons=100,fc_dropout=0):
         self.fc1 = nn.Linear(c_in, n_neurons, bias=True) 
         torch.nn.init.xavier_uniform(self.fc1.weight)
         self.linear = nn.Sequential(
@@ -108,7 +108,7 @@ class ShallowClassifier(Module):
         return out
 ####################################################################################
 class EncoderClassifier(Module):
-    def __init__(self,c_in,c_out,encoder,n_neurons=20,fc_dropout=0,embed_size = 3):
+    def __init__(self,c_in,c_out,encoder,n_neurons=100,fc_dropout=0,embed_size = 2):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.body = encoder.to(device)
         self.head = ShallowClassifier(embed_size,c_out,n_neurons,fc_dropout).to(device)

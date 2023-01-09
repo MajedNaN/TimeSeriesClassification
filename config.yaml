@@ -7,11 +7,11 @@ sample_segment:
   sampling: True
 
 model:  
-  epochs:  10
+  epochs:  100
   bs:  32
   num_workers:  2
 
 optuna:
-  epochs:  50
+  epochs:  100
   trials:  100
 

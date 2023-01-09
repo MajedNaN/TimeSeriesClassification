@@ -7,10 +7,13 @@ from mylearner import *
 data_folder = '/scratch/smartairsense/data/'
 csv_file = os.path.join(data_folder,'df_minimal_clean.csv')
 df_chunks = pd.read_csv(csv_file,chunksize=100000,usecols=['humidity_abs','temperature','tvoc','oxygen','co2','co','no2','o3'],dtype=np.float32)
-
 n_features = 8
 ### autoencoder
-autoencoder = AutoEncoder(n_features)
+#### pure lstm [149952] (3 lstm in encoder and decoder) in->100, 100->50,50->2 .. 2->50,50->100,100->in    [seq 10]
+### P/R/kl_score person 0.82/1/0.92, window 1/1/1
+##### cnn+lstm [154536] 64 filter 1d cnn, 2 lstm, in->64, 64->100, 100 ->2   
+### P/R/kl_score person 1/0.81/0.90, window 1/1/1          [seq 10]
+autoencoder = AutoEncoder(c_in=n_features) 
 ### statistics over all chunks
 history = dict(train=[], val=[])
 n_x_train = 0
@@ -94,7 +97,7 @@ plt.title('Distribution of datset')
 # plt.xlabel('x')
 # plt.ylabel('y')
 ax.bar_label(bars)
-plt.savefig(f'distribution_auto_enc.png_{seq_len}')
+plt.savefig(f'distribution_auto_enc_{seq_len}.png')
 
 ### plot train/valid losses
 plt.figure()
@@ -104,7 +107,7 @@ plt.plot(x,history['train'],label='train_loss')
 plt.plot(x,history['val'],label = 'valid_loss')
 plt.xlabel('epochs')
 plt.legend()
-plt.savefig(f'losses_auto_enc.png_{seq_len}')
+plt.savefig(f'losses_auto_enc_{seq_len}.png')
 
 ##############predict for autoencoder##################
 # predictions, pred_losses = predict_autoencoder(autoencoder, dls.valid)
