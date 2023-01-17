@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-p', '--data_path', type=str, default='/scratch/smartairsense/h5Files', help='')
     parser.add_argument('-f', '--file_name', type=str, default='part1.h5', help='')
-    parser.add_argument('-s', '--save_path', type=str, default='~/internship', help='')
+    parser.add_argument('-s', '--save_path', type=str, default='~/data', help='')
     parser.add_argument('--flag_minimal', action='store_true', help='')
     parser.add_argument('--flag_metadata', action='store_true', help='')
     parser.add_argument('-r', '--remove_list', nargs='*', default=['h2s'], help='')

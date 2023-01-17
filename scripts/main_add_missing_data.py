@@ -6,9 +6,9 @@ if __name__ == '__main__':
     #TODO: add the description for the args
     parser = argparse.ArgumentParser(description='smartair dataset arguments')
 
-    parser.add_argument('-p', '--data_path', type=str, default='/afs/tu-chemnitz.de/home/urz/a/abom/internship/', help='')
+    parser.add_argument('-p', '--data_path', type=str, default='/afs/tu-chemnitz.de/home/urz/a/abom/data/', help='')
     parser.add_argument('-f', '--file_name', type=str, default='df_limit_large.csv', help='')
-    parser.add_argument('-s', '--save_path', type=str, default='/afs/tu-chemnitz.de/home/urz/a/abom/internship/', help='')
+    parser.add_argument('-s', '--save_path', type=str, default='/afs/tu-chemnitz.de/home/urz/a/abom/data/', help='')
     parser.add_argument('--window_size', type=float, default='120')
     parser.add_argument('--min_diff_multip', type=float, default='1.5')
     parser.add_argument('--max_diff_multip', type=float, default='3.2')
