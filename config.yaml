@@ -5,6 +5,7 @@ sample_segment:
   stride:  1
   sliding_mode:  start
   sampling: True
+  all_features:  True
 
 model:  
   epochs:  100

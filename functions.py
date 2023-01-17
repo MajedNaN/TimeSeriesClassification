@@ -39,12 +39,14 @@ def plot_missing(df):
 def impute_NaN(df):
     '''interpolate or drop NaN
     '''
-    df.reset_index(drop=True,inplace=True)
-    df.interpolate(method='polynomial', order=1,inplace=True)
+    df_new = df.copy()
+    df_new.reset_index(drop=True,inplace=True)
+    df_new.interpolate(method='polynomial', order=1,inplace=True)
     ## incase NaNs are at begining or end we drop those rows
 
-    df.dropna(axis=0,inplace=True)
-    df.reset_index(drop=True,inplace=True)
+    df_new.dropna(axis=0,inplace=True)
+    df_new.reset_index(drop=True,inplace=True)
+    return df_new
 #*************************************************
 def freeze(learn):
     '''
@@ -356,13 +358,17 @@ def sliding(window,stride,features,targets=None,mode='end',start=0):
         i += stride
         length = window + i
         count += 1
-    x = np.array(x,dtype=np.float32)#.reshape((count,features.shape[1], window))
-    x = np.transpose(x, (0, 2, 1)) ## to have correct segmentation shape (#samples,#features,seq_len)
+    
+    if len(x)==0: 
+        x = np.array(x,dtype=np.float32).reshape((count,features.shape[1], window))
+    else:
+        x = np.array(x,dtype=np.float32)#.reshape((count,features.shape[1], window))
+        x = np.transpose(x, (0, 2, 1)) ## to have correct segmentation shape (#samples,#features,seq_len)
 
     ### to be compatible with torch
     if targets is not None:
         try:
-            sh = targets.shape[1]
+            sh = targets.shape[1] ### more than 1 feature (has 2nd dimension)
         except:
             sh = 1
         y = np.array(y,dtype=np.float32).reshape(-1,sh)

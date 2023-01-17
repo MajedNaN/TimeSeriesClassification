@@ -4,12 +4,19 @@ from archs import *
 from mylearner import *
 
 ### loading data
-data_folder = '/scratch/smartairsense/data/'
-csv_file = os.path.join(data_folder,'df_minimal_clean.csv')
-df_chunks = pd.read_csv(csv_file,chunksize=100000,usecols=['humidity_abs','temperature','tvoc','oxygen','co2','co','no2','o3'],dtype=np.float32)
-n_features = 8
+
+csv_file = '~/data/df_limit_large_clean.csv'
+
+
+cols = list(pd.read_csv(csv_file,nrows=1))
+exclude_cols = ['deviceid', 'timestamp', 'datetime'] 
+df_chunks = pd.read_csv(csv_file, usecols =[i for i in cols if i not in exclude_cols],dtype=np.float32)#,chunksize=100000)
+n_features = len(cols)-len(exclude_cols)-1 ### -1 to remove deviceid_int which we will use only to separate data and drop it later
+
+
 ### autoencoder
-autoencoder = AutoEncoder(c_in=n_features) 
+autoencoder = AutoEncoder(c_in=n_features,embed_size=2) 
+
 ### statistics over all chunks
 history = dict(train=[], val=[])
 n_x_train = 0
@@ -31,17 +38,18 @@ num_workers = hyperparams['model']['num_workers']
 ### for time 
 start = time.time()
 
-for df in df_chunks:
+device_ids = df_chunks['deviceid_int'].unique()
+for device_id in device_ids:
     
-    ### impute NaN
-    impute_NaN(df) ## polynomial interpolation with degree > 1 uses index, also convert dtype to float to work
-    df.reset_index(drop=True,inplace= True)
-    df.columns=df.columns
+    df = (df_chunks.loc[df_chunks['deviceid_int'] == device_id]).drop(columns=['deviceid_int'])
+    # df_new = df_new.sort_values(by=['datetime'])
+    df.reset_index(drop=True,inplace=True)
 
 
     ### sliding 
     X= sliding(seq_len,stride,df,mode=sliding_mode)  
-
+    if (X.shape[0]==0):
+        continue
     ## splitting and standardization
     splits = TrainValidTestSplitter(valid_size=0.01)(X[:,0,0]) ##### we DON'T have test set here
     x_train = np.zeros(X[splits[0]].shape,dtype=np.float32)
@@ -75,7 +83,7 @@ for df in df_chunks:
     n_chunks += 1
 
     ### save the autoencoder
-    torch.save(autoencoder.state_dict(), f'models/{autoencoder._get_name()}_{seq_len}.pt')
+    torch.save(autoencoder.state_dict(), f'models/{autoencoder._get_name()}_{seq_len}_all.pt')
 
     elapsed = (time.time()-start)/3600  ### in hours
     print(f'elapsed time = {elapsed} hours, # of chunks= {n_chunks}, # of epochs= {n_epochs}, # of train sequences= {n_x_train}, # of valid sequences= {n_x_valid}')
@@ -93,7 +101,7 @@ plt.title('Distribution of datset')
 # plt.xlabel('x')
 # plt.ylabel('y')
 ax.bar_label(bars)
-plt.savefig(f'distribution_auto_enc_{seq_len}.png')
+plt.savefig(f'autoencoder_plots/distribution_auto_enc_{seq_len}_all.png')
 
 ### plot train/valid losses
 plt.figure()
@@ -103,7 +111,7 @@ plt.plot(x,history['train'],label='train_loss')
 plt.plot(x,history['val'],label = 'valid_loss')
 plt.xlabel('epochs')
 plt.legend()
-plt.savefig(f'losses_auto_enc_{seq_len}.png')
+plt.savefig(f'autoencoder_plots/losses_auto_enc_{seq_len}_all.png')
 
 ##############predict for autoencoder##################
 # predictions, pred_losses = predict_autoencoder(autoencoder, dls.valid)

@@ -3,14 +3,16 @@ from imports import *
 
 ######################################################################################
 class Encoder(Module):
-    def __init__ (self,c_in, embed_size = 2, hidden_size=100,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
+    def __init__ (self,c_in, embed_size = 2, hidden_size=128,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
 
             
-        self.conv = ConvBlock(c_in, nf,kernel_size,padding= 0,act = nn.LeakyReLU)
-        self.rnn1 = nn.LSTM(nf, hidden_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+        # self.conv = ConvBlock(c_in, nf,kernel_size,padding= 0,act = nn.LeakyReLU)
+        self.rnn1 = nn.LSTM(c_in, hidden_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
                               bidirectional=bidirectional)
-        self.rnn2 = nn.LSTM((1+bidirectional)*hidden_size, embed_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
-                              bidirectional=False)
+        self.rnn2 = nn.LSTM(hidden_size, hidden_size//2, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+                              bidirectional=bidirectional)
+        self.rnn3 = nn.LSTM(hidden_size//2, embed_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+                              bidirectional=bidirectional)
 
                 
         if init_weights: self.apply(self._weights_init)
@@ -29,30 +31,32 @@ class Encoder(Module):
             elif 'bias_hh' in name:
                 params.data.fill_(0)
     def forward (self, x):
-        # x = self.encoder(x)
-        x = self.conv(x)
+        # x = self.conv(x)
         x = x.transpose(2,1)    # [batch_size x n_vars x seq_len] --> [batch_size x seq_len x n_vars]
         x, _ = self.rnn1(x)
-        x, (hn,_) = self.rnn2(x)
+        x, _ = self.rnn2(x)
+        x, (hn,_) = self.rnn3(x)
         # x = x[:, -1]  # output from last sequence step : [batch_size x hidden_size * (1 + bidirectional)]
         # x = out.view(out.shape[0],1,out.shape[1])  ### [batch_size x 1 x hidden_size * (1 + bidirectional)]
         return x   ### or return hn.transpose(1,0) -> shape (n_layers=1,embed_size)
 #####################################################################################
 
 class Decoder(Module):
-    def __init__ (self, c_out,embed_size = 2, hidden_size=100,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
+    def __init__ (self, c_out,embed_size = 2, hidden_size=128,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
 
             
         # self.conv_len = conv_len
         # self.c_out = c_out 
         # self.embed_size = embed_size
-        self.rnn1 = nn.LSTM(embed_size, hidden_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+        self.rnn1 = nn.LSTM(embed_size, embed_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
                               bidirectional=bidirectional)
-        self.rnn2 = nn.LSTM((1+bidirectional)*hidden_size, nf, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
-                              bidirectional=False)
-        self.conv = nn.ConvTranspose1d(nf, c_out,kernel_size)
-        # self.linear = nn.Linear(hidden_size, c_out)
-                
+        self.rnn2 = nn.LSTM(embed_size, hidden_size//2, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+                              bidirectional=bidirectional)
+        self.rnn3 = nn.LSTM(hidden_size//2, hidden_size, num_layers=n_layers, bias=bias, batch_first=True, dropout=rnn_dropout, 
+                              bidirectional=bidirectional)
+
+        self.linear = nn.Linear(hidden_size, c_out)
+
         if init_weights: self.apply(self._weights_init)
         
     def _weights_init(self, m): 
@@ -72,15 +76,15 @@ class Decoder(Module):
 
         #### if get last step only from encoder
         # x = x.repeat(self.conv_len,1)    ## to be passed to rnn as seq_len x n_vars "here embed_size"
-        # x = x.view((-1,self.conv_len, self.embed_size))
         x, _ = self.rnn1(x)
-        x, (hn,_) = self.rnn2(x)
+        x, _ = self.rnn2(x)
+        x, (hn,_) = self.rnn3(x)
+        x = TimeDistributed (self.linear, batch_first=True) (x)
         x = x.transpose(2,1)    # [batch_size x seq_len x n_vars] --> [batch_size x n_vars x seq_len] 
-        x = F.leaky_relu(self.conv(x)) 
         return x
 #########################################################################################
 class AutoEncoder(Module):
-  def __init__(self,c_in,embed_size = 2, hidden_size=100,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
+  def __init__(self,c_in,embed_size = 2, hidden_size=128,nf=64,kernel_size=3, n_layers=1, bias=True, rnn_dropout=0, bidirectional=False, init_weights=True):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     self.encoder = Encoder(c_in,embed_size , hidden_size,nf,kernel_size, n_layers, bias, rnn_dropout, bidirectional, init_weights).to(device)
     self.decoder = Decoder(c_in,embed_size , hidden_size,nf,kernel_size, n_layers, bias, rnn_dropout, bidirectional, init_weights).to(device)
