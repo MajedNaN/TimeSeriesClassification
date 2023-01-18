@@ -25,4 +25,5 @@ from copy import deepcopy
 
 from sklearn.decomposition import PCA
 import plotly.express as px
+import plotly.graph_objects as go
 from sklearn.manifold import TSNE

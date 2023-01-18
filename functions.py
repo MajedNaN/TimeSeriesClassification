@@ -179,30 +179,44 @@ def plot_PR_curve(class_name,y_true,y_probas):
 
 
 # *******************************
-def visualize_embeddings(features, person_labels, window_labels,n_components = 2, method = 'pca'):
+def visualize_embeddibgs(features, person_labels, window_labels,features_unannotated=None,unannotated_labels = None,n_components = 2, method = 'pca'):
     '''
     visualize embeddings using sklearn and plotly
     '''
 
-    #### normalize
-    # features = StandardScaler().fit_transform(features)
+    ### normalize
+    features = StandardScaler().fit_transform(features)
+    features_unannotated = StandardScaler().fit_transform(features_unannotated)
 
     if method == 'tsne':
         tsne = TSNE(n_components = n_components)
         components = tsne.fit_transform(features)
+        if features_unannotated is not None:
+            components_unannotated = tsne.fit_transform(features_unannotated)
         name = 't-SNE'
     elif method == 'pca':
         pca = PCA(n_components = n_components)
         components = pca.fit_transform(features)
         total_var = pca.explained_variance_ratio_.sum() * 100
+        if features_unannotated is not None:
+            components_unannotated = pca.fit_transform(features_unannotated)
         name = 'PCA'
 
     if n_components == 2:
         ### class person
-        fig = px.scatter(components, x=0, y=1, color=person_labels,
+        
+        fig1 = px.scatter(components, x=0, y=1, color=person_labels,
             # title=f'Total Explained Variance: {total_var:.2f}',
-            labels={'0': 'x', '1': 'y'}
+                    labels={'0': 'x', '1': 'y'}
+
         )
+        fig2 = px.scatter(components_unannotated, x=0, y=1, color=unannotated_labels, 
+                    labels={'0': 'x', '1': 'y'}
+
+          
+        ).update_traces(marker=dict(color='orange'))
+        
+        fig = go.Figure(data = fig1.data + fig2.data)
         fig.update_layout(
             title={
                 'text': f'{name} of class person',
@@ -212,10 +226,15 @@ def visualize_embeddings(features, person_labels, window_labels,n_components = 2
                 'yanchor': 'top'})
         fig.show()
         ### class window
-        fig = px.scatter(components, x=0, y=1, color=window_labels,
+        fig1 = px.scatter(components, x=0, y=1, color=window_labels,
             # title=f'Total Explained Variance: {total_var:.2f}',
             labels={'0': 'x', '1': 'y'}
         )
+        fig2 = px.scatter(components_unannotated, x=0, y=1, color=unannotated_labels,
+            # title=f'Total Explained Variance: {total_var:.2f}',
+            labels={'0': 'x', '1': 'y'}
+        ).update_traces(marker=dict(color='orange'))
+        fig = go.Figure(data = fig1.data + fig2.data)
         fig.update_layout(
             title={
                 'text': f'{name} of class window',
@@ -271,7 +290,6 @@ def visualize_embeddings(features, person_labels, window_labels,n_components = 2
     # plt.show()
 
     return components
-
 # *******************************
 
 def standardize(x,mode=1):
