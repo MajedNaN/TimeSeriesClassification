@@ -24,10 +24,10 @@ n_x_valid =0
 n_epochs = 0
 n_chunks = 0
 
-valid_epochs = 0
 
 with open('config.yaml') as f:  ### loading hyperparameters
     hyperparams = yaml.load(f,SafeLoader)
+
 under_window = hyperparams['sample_segment']['under_window']
 seq_len = hyperparams['sample_segment']['seq_len']
 stride = hyperparams['sample_segment']['stride']
@@ -38,55 +38,75 @@ num_workers = hyperparams['model']['num_workers']
 ### for time 
 start = time.time()
 
+X = np.empty((0,n_features, seq_len),dtype = np.float32)
 device_ids = df_chunks['deviceid_int'].unique()
+
+count = 0
 for device_id in device_ids:
     
-    df = (df_chunks.loc[df_chunks['deviceid_int'] == device_id]).drop(columns=['deviceid_int'])
+    df_temp = df_chunks.loc[df_chunks['deviceid_int'] == device_id]
+    df = (df_temp).drop(columns=['deviceid_int'])
     # df_new = df_new.sort_values(by=['datetime'])
     df.reset_index(drop=True,inplace=True)
 
+    ### free some memory
+    df_chunks.drop(index = df_temp.index, inplace =True) 
 
     ### sliding 
-    X= sliding(seq_len,stride,df,mode=sliding_mode)  
-    if (X.shape[0]==0):
-        continue
-    ## splitting and standardization
-    splits = TrainValidTestSplitter(valid_size=0.01)(X[:,0,0]) ##### we DON'T have test set here
-    x_train = np.zeros(X[splits[0]].shape,dtype=np.float32)
-    x_valid = np.zeros(X[splits[1]].shape,dtype=np.float32)
-    scalers = {}
-    for i in range(x_train.shape[1]): ## n_features
-        scalers[i] = StandardScaler()
-        scalers[i].fit(np.unique((X[splits[0]])[:, i, :]).reshape(-1,1)) ### as we have overlapping samples
-        x_train[:, i, :] = scalers[i].transform((X[splits[0]])[:, i, :].reshape(-1,1)).reshape(x_train.shape[0],x_train.shape[-1])
-        x_valid[:, i, :] = scalers[i].transform((X[splits[1]])[:, i, :].reshape(-1,1)).reshape(x_valid.shape[0],x_valid.shape[-1])
+    X_temp = sliding(seq_len,stride,df,mode=sliding_mode)
+    
+    ### concatenate
+    X = np.append(X, X_temp, axis = 0)
 
-    ###training/validation dataloaders
-    Tsets = TSDatasets(x_train, inplace=True)
-    Vsets = TSDatasets(x_valid, inplace=True)
-    dls   = TSDataLoaders.from_dsets(Tsets, Vsets, bs = bs, num_workers=num_workers)
-    #####training
-    autoencoder, history_chunk = train_autoencoder(
-    autoencoder,
-    dls.train,
-    dls.valid,
-    n_epochs= epochs
-    )
-    ### accumulate train/valid loss
-    history['train'].extend(history_chunk['train'])
-    history['val'].extend(history_chunk['val'])
-    ### total number of sequences x_train, x_valid
-    n_x_train += x_train.shape[0]
-    n_x_valid += x_valid.shape[0]
-    ## n_epochs, n_chunks
-    n_epochs += epochs
-    n_chunks += 1
+    count += 1
+    print(count)
 
-    ### save the autoencoder
-    torch.save(autoencoder.state_dict(), f'models/{autoencoder._get_name()}_{seq_len}_all.pt')
+    # if (X.shape[0]==0):
+    #     continue
 
-    elapsed = (time.time()-start)/3600  ### in hours
-    print(f'elapsed time = {elapsed} hours, # of chunks= {n_chunks}, # of epochs= {n_epochs}, # of train sequences= {n_x_train}, # of valid sequences= {n_x_valid}')
+del X_temp, df_temp, df, df_chunks
+
+## splitting and standardization
+splits = TrainValidTestSplitter(valid_size=0.01)(X[:,0,0]) ##### we DON'T have test set here
+# x_train = X[splits[0]]
+# x_valid = X[splits[1]]
+
+## normalization for all devices
+x_train = np.zeros(X[splits[0]].shape,dtype=np.float32)
+x_valid = np.zeros(X[splits[1]].shape,dtype=np.float32)
+scalers = {}
+for i in range(x_train.shape[1]): ## n_features
+    scalers[i] = StandardScaler()
+    scalers[i].fit(np.unique((X[splits[0]])[:, i, :]).reshape(-1,1)) ### as we have overlapping samples
+    x_train[:, i, :] = scalers[i].transform((X[splits[0]])[:, i, :].reshape(-1,1)).reshape(x_train.shape[0],x_train.shape[-1])
+    x_valid[:, i, :] = scalers[i].transform((X[splits[1]])[:, i, :].reshape(-1,1)).reshape(x_valid.shape[0],x_valid.shape[-1])
+
+###training/validation dataloaders
+Tsets = TSDatasets(x_train, inplace=True)
+Vsets = TSDatasets(x_valid, inplace=True)
+dls   = TSDataLoaders.from_dsets(Tsets, Vsets, bs = bs, num_workers=num_workers)
+#####training
+autoencoder, history_chunk = train_autoencoder(
+autoencoder,
+dls.train,
+dls.valid,
+n_epochs= epochs)
+
+### accumulate train/valid loss
+history['train'].extend(history_chunk['train'])
+history['val'].extend(history_chunk['val'])
+### total number of sequences x_train, x_valid
+n_x_train += x_train.shape[0]
+n_x_valid += x_valid.shape[0]
+## n_epochs, n_chunks
+n_epochs += epochs
+n_chunks += 1
+
+### save the autoencoder
+torch.save(autoencoder.state_dict(), f'models/{autoencoder._get_name()}_{seq_len}_all.pt')
+
+elapsed = (time.time()-start)/3600  ### in hours
+print(f'elapsed time = {elapsed} hours, # of chunks= {n_chunks}, # of epochs= {n_epochs}, # of train sequences= {n_x_train}, # of valid sequences= {n_x_valid}')
 
 ### plotting distribution of data
 x_lbs = ['train set','valid set']
