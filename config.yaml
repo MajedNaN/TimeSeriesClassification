@@ -8,7 +8,7 @@ sample_segment:
   all_features:  False
 
 model:  
-  epochs:  100
+  epochs:  10
   bs:  32
   num_workers:  2
 

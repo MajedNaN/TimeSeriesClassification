@@ -200,8 +200,8 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
     visualize embeddings using sklearn and plotly
     '''
     ### normalize
-    features = StandardScaler().fit_transform(features)
-    features_unannotated = StandardScaler().fit_transform(features_unannotated)
+    features = StandardScaler().fit_transform(features).copy()
+    features_unannotated = StandardScaler().fit_transform(features_unannotated).copy()
 
     if method == 'tsne':
         tsne = TSNE(n_components = n_components)
@@ -250,7 +250,10 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
         if combined:
             fig1 = go.Figure(data = fig1.data + fig3.data)
             fig2 = go.Figure(data = fig2.data + fig3.data)
+            label = 'and unannotated data'
         else:
+            label = ''
+
             fig3.update_layout(
             title={
                 'text': f'{name} of class Ununnotated data',
@@ -262,7 +265,7 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
 
         fig1.update_layout(
             title={
-                'text': f'{name} of class person',
+                'text': f'{name} of class person {label}',
                 'y':0.9,
                 'x':0.5,
                 'xanchor': 'center',
@@ -271,7 +274,7 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
         
         fig2.update_layout(
             title={
-                'text': f'{name} of class window',
+                'text': f'{name} of class window {label}',
                 'y':0.9,
                 'x':0.5,
                 'xanchor': 'center',
