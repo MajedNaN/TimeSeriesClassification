@@ -41,7 +41,7 @@ start = time.time()
 X = np.empty((0,n_features, seq_len),dtype = np.float32)
 device_ids = df_chunks['deviceid_int'].unique()
 
-count = 0
+device_count = 0
 for device_id in device_ids:
     
     df_temp = df_chunks.loc[df_chunks['deviceid_int'] == device_id]
@@ -58,8 +58,8 @@ for device_id in device_ids:
     ### concatenate
     X = np.append(X, X_temp, axis = 0)
 
-    count += 1
-    print(count)
+    device_count += 1
+    print(f'device #: {device_count}')
 
     # if (X.shape[0]==0):
     #     continue
