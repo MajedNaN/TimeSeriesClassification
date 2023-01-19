@@ -112,7 +112,7 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
 
             batch_count += 1
             if batch_count % 100:
-                print(f'Training batch # {batch_count}/{dls_length}')
+                print(f'Training batch: #{batch_count}/{dls_length}, train loss: {train_losses[-1]}')
 
         val_losses = []
         batch_count = 0
@@ -127,7 +127,7 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
 
                 batch_count += 1
                 if batch_count % 100:
-                    print(f'Validating batch # {batch_count}/{dls_length}')
+                    print(f'Validating batch #{batch_count}/{dls_length}, val loss: {val_losses[-1]}')
 
         train_loss = np.mean(train_losses)
         val_loss = np.mean(val_losses)
