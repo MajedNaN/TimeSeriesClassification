@@ -99,6 +99,8 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
     for epoch in range(1, n_epochs + 1):
         model = model.train()
         train_losses = []
+        batch_count = 0
+        dls_length = len(train_dls)
         for seq_true in train_dls:
             optimizer.zero_grad()
             seq_true = seq_true[0].to(device)
@@ -107,7 +109,14 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
             loss.backward()
             optimizer.step()
             train_losses.append(loss.item())
+
+            batch_count += 1
+            if batch_count % 100:
+                print(f'Training batch # {batch_count}/{dls_length}')
+
         val_losses = []
+        batch_count = 0
+        dls_length = len(val_dls)
         model = model.eval()
         with torch.no_grad():
             for seq_true in val_dls:
@@ -115,6 +124,11 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
                 seq_pred = model(seq_true)
                 loss = criterion(seq_pred, seq_true)
                 val_losses.append(loss.item())
+
+                batch_count += 1
+                if batch_count % 100:
+                    print(f'Validating batch # {batch_count}/{dls_length}')
+
         train_loss = np.mean(train_losses)
         val_loss = np.mean(val_losses)
         history['train'].append(train_loss)
