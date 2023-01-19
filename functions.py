@@ -179,11 +179,10 @@ def plot_PR_curve(class_name,y_true,y_probas):
 
 
 # *******************************
-def visualize_embeddibgs(features, person_labels, window_labels,features_unannotated=None,unannotated_labels = None,n_components = 2, method = 'pca'):
+def visualize_embeddibgs(features, person_labels, window_labels,features_unannotated=None,unannotated_labels = None,combined=True,n_components = 2, method = 'pca'):
     '''
     visualize embeddings using sklearn and plotly
     '''
-
     ### normalize
     features = StandardScaler().fit_transform(features)
     features_unannotated = StandardScaler().fit_transform(features_unannotated)
@@ -204,80 +203,64 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
 
     if n_components == 2:
         ### class person
-        
         fig1 = px.scatter(components, x=0, y=1, color=person_labels,
             # title=f'Total Explained Variance: {total_var:.2f}',
-                    labels={'0': 'x', '1': 'y'}
-
-        )
-        fig2 = px.scatter(components_unannotated, x=0, y=1, color=unannotated_labels, 
-                    labels={'0': 'x', '1': 'y'}
-
-          
-        ).update_traces(marker=dict(color='orange'))
-        
-        fig = go.Figure(data = fig1.data + fig2.data)
-        fig.update_layout(
-            title={
-                'text': f'{name} of class person',
-                'y':0.9,
-                'x':0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'})
-        fig.show()
+                    labels={'0': 'x', '1': 'y'})
         ### class window
-        fig1 = px.scatter(components, x=0, y=1, color=window_labels,
+        fig2 = px.scatter(components, x=0, y=1, color=window_labels,
             # title=f'Total Explained Variance: {total_var:.2f}',
-            labels={'0': 'x', '1': 'y'}
-        )
-        fig2 = px.scatter(components_unannotated, x=0, y=1, color=unannotated_labels,
-            # title=f'Total Explained Variance: {total_var:.2f}',
-            labels={'0': 'x', '1': 'y'}
-        ).update_traces(marker=dict(color='orange'))
-        fig = go.Figure(data = fig1.data + fig2.data)
-        fig.update_layout(
-            title={
-                'text': f'{name} of class window',
-                'y':0.9,
-                'x':0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'})
-        fig.show()
-
-
+            labels={'0': 'x', '1': 'y'})
     elif n_components == 3:
         ### class person
-        fig = px.scatter_3d(
+        fig1 = px.scatter_3d(
             components, x=0, y=1, z=2, color=person_labels,
             # title=f'Total Explained Variance: {total_var:.2f}',
-            labels={'0': 'x', '1': 'y', '2': 'z'}
-        )
-        fig.update_layout(
-            title={
-                'text': f'{name} of class person',
-                'y':0.9,
-                'x':0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'})
-        fig.show()
+            labels={'0': 'x', '1': 'y', '2': 'z'})
         ### class window
-        fig = px.scatter_3d(
+        fig2 = px.scatter_3d(
             components, x=0, y=1, z=2, color=window_labels,
             # title=f'Total Explained Variance: {total_var:.2f}',
-            labels={'0': 'x', '1': 'y', '2': 'z'}
-        )
-        fig.update_layout(
-            title={
-                'text': f'{name} of class window',
-                'y':0.9,
-                'x':0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'})
-        fig.show()
+            labels={'0': 'x', '1': 'y', '2': 'z'})
     else:
         print('Can only visualize in 2D and 3D !')
         return
+    if features_unannotated is not None:
+        if n_components == 2:
+            fig3 = px.scatter(components_unannotated, x=0, y=1, color=unannotated_labels, 
+                            labels={'0': 'x', '1': 'y'}).update_traces(marker=dict(color='orange'))
+        elif n_components == 3:
+            fig3 = px.scatter_3d(components_unannotated, x=0, y=1,z=2, color=unannotated_labels, 
+                            labels={'0': 'x', '1': 'y', '2': 'z'}).update_traces(marker=dict(color='orange'))
+        if combined:
+            fig1 = go.Figure(data = fig1.data + fig3.data)
+            fig2 = go.Figure(data = fig2.data + fig3.data)
+        else:
+            fig3.update_layout(
+            title={
+                'text': f'{name} of class Ununnotated data',
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+            fig3.show()
 
+        fig1.update_layout(
+            title={
+                'text': f'{name} of class person',
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+        fig1.show()
+        
+        fig2.update_layout(
+            title={
+                'text': f'{name} of class window',
+                'y':0.9,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+        fig2.show()
     #####################################################################
     ### matplotlib for person class
     # plt.figure()
@@ -290,6 +273,7 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
     # plt.show()
 
     return components
+
 # *******************************
 
 def standardize(x,mode=1):
