@@ -91,6 +91,8 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
     '''
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss().to(device)
     history = dict(train=[], val=[])
@@ -111,8 +113,8 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
             train_losses.append(loss.item())
 
             batch_count += 1
-            if batch_count % 100 ==0 :
-                print(f'Training batch: #{batch_count}/{dls_length}, train loss: {train_losses[-1]}')
+            if batch_count % 1000 ==0 :
+                print(f'Training batch# :{batch_count}/{dls_length}, train loss: {train_losses[-1]}')
 
         val_losses = []
         batch_count = 0
@@ -126,8 +128,8 @@ def train_autoencoder(model, train_dls, val_dls, n_epochs,lr = 1e-3):
                 val_losses.append(loss.item())
 
                 batch_count += 1
-                if batch_count % 100 == 0:
-                    print(f'Validating batch #{batch_count}/{dls_length}, val loss: {val_losses[-1]}')
+                if batch_count % 1000 == 0:
+                    print(f'Validating batch#: {batch_count}/{dls_length}, val loss: {val_losses[-1]}')
 
         train_loss = np.mean(train_losses)
         val_loss = np.mean(val_losses)
