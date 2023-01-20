@@ -14,6 +14,7 @@ sliding_mode = hyperparams['sample_segment']['sliding_mode']
 epochs = hyperparams['model']['epochs']
 bs = hyperparams['model']['bs']
 num_workers = hyperparams['model']['num_workers']
+embed_size = hyperparams['model']['embed_size']
 
 ### loading data
 
@@ -27,7 +28,7 @@ n_features = len(cols)-len(exclude_cols)-1 ### -1 to remove deviceid_int which w
 
 
 ### autoencoder
-autoencoder = AutoEncoder(c_in=n_features,embed_size=16) 
+autoencoder = AutoEncoder(c_in=n_features,embed_size=embed_size) 
 
 ### statistics over all chunks
 history = dict(train=[], val=[])
@@ -105,7 +106,7 @@ n_epochs += epochs
 n_chunks += 1
 
 ### save the autoencoder
-torch.save(autoencoder.state_dict(), f'models/{autoencoder._get_name()}_{seq_len}_shuffled_16.pt')
+torch.save(autoencoder.state_dict(), f'models/{autoencoder._get_name()}_{seq_len}_shuffled_{embed_size}.pt')
 
 elapsed = (time.time()-start)/3600  ### in hours
 print(f'elapsed time = {elapsed} hours, # of chunks= {n_chunks}, # of epochs= {n_epochs}, # of train sequences= {n_x_train}, # of valid sequences= {n_x_valid}')
@@ -123,7 +124,7 @@ plt.title('Distribution of datset')
 # plt.xlabel('x')
 # plt.ylabel('y')
 ax.bar_label(bars)
-plt.savefig(f'autoencoder_plots/distribution_auto_enc_{seq_len}_shuffled_16.png')
+plt.savefig(f'autoencoder_plots/distribution_auto_enc_{seq_len}_shuffled_{embed_size}.png')
 
 ### plot train/valid losses
 plt.figure()
@@ -133,7 +134,7 @@ plt.plot(x,history['train'],label='train_loss')
 plt.plot(x,history['val'],label = 'valid_loss')
 plt.xlabel('epochs')
 plt.legend()
-plt.savefig(f'autoencoder_plots/losses_auto_enc_{seq_len}_shuffled_16.png')
+plt.savefig(f'autoencoder_plots/losses_auto_enc_{seq_len}_shuffled_{embed_size}.png')
 
 ##############predict for autoencoder##################
 # predictions, pred_losses = predict_autoencoder(autoencoder, dls.valid)
