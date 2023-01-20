@@ -195,13 +195,16 @@ def plot_PR_curve(class_name,y_true,y_probas):
 
 
 # *******************************
-def visualize_embeddibgs(features, person_labels, window_labels,features_unannotated=None,unannotated_labels = None,combined=True,n_components = 2, method = 'pca'):
+def visualize_embeddibgs(features, person_labels, window_labels,features_unannotated=None,unannotated_labels = None,combined=False,n_components = 2, method = 'pca'):
     '''
     visualize embeddings using sklearn and plotly
     '''
+    label = ''
+
     ### normalize
     features = StandardScaler().fit_transform(features).copy()
-    features_unannotated = StandardScaler().fit_transform(features_unannotated).copy()
+    if features_unannotated is not None:
+        features_unannotated = StandardScaler().fit_transform(features_unannotated).copy()
 
     if method == 'tsne':
         tsne = TSNE(n_components = n_components)
@@ -252,7 +255,6 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
             fig2 = go.Figure(data = fig2.data + fig3.data)
             label = 'and unannotated data'
         else:
-            label = ''
 
             fig3.update_layout(
             title={
@@ -263,23 +265,23 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
                 'yanchor': 'top'})
             fig3.show()
 
-        fig1.update_layout(
-            title={
-                'text': f'{name} of class person {label}',
-                'y':0.9,
-                'x':0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'})
-        fig1.show()
-        
-        fig2.update_layout(
-            title={
-                'text': f'{name} of class window {label}',
-                'y':0.9,
-                'x':0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'})
-        fig2.show()
+    fig1.update_layout(
+        title={
+            'text': f'{name} of class person {label}',
+            'y':0.9,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'})
+    fig1.show()
+    
+    fig2.update_layout(
+        title={
+            'text': f'{name} of class window {label}',
+            'y':0.9,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'})
+    fig2.show()
     #####################################################################
     ### matplotlib for person class
     # plt.figure()
@@ -292,6 +294,7 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
     # plt.show()
 
     return components
+
 
 # *******************************
 
