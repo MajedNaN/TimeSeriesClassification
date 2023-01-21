@@ -11,7 +11,7 @@ model:
   epochs:  100
   bs:  32
   num_workers:  2
-  embed_size:  2
+  embed_size:  16
 
 optuna:
   epochs:  100
