@@ -202,22 +202,22 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
     label = ''
 
     ### normalize
-    features = StandardScaler().fit_transform(features).copy()
+    __features = StandardScaler().fit_transform(features)
     if features_unannotated is not None:
-        features_unannotated = StandardScaler().fit_transform(features_unannotated).copy()
+        __features_unannotated = StandardScaler().fit_transform(features_unannotated)
 
     if method == 'tsne':
         tsne = TSNE(n_components = n_components)
-        components = tsne.fit_transform(features)
+        components = tsne.fit_transform(__features)
         if features_unannotated is not None:
-            components_unannotated = tsne.fit_transform(features_unannotated)
+            components_unannotated = tsne.fit_transform(__features_unannotated)
         name = 't-SNE'
     elif method == 'pca':
         pca = PCA(n_components = n_components)
-        components = pca.fit_transform(features)
+        components = pca.fit_transform(__features)
         total_var = pca.explained_variance_ratio_.sum() * 100
         if features_unannotated is not None:
-            components_unannotated = pca.fit_transform(features_unannotated)
+            components_unannotated = pca.fit_transform(__features_unannotated)
         name = 'PCA'
 
     if n_components == 2:
