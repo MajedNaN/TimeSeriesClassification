@@ -40,13 +40,18 @@ def impute_NaN(df):
     '''interpolate or drop NaN
     '''
     df_new = df.copy()
-    # df_new.reset_index(drop=True,inplace=True)
-    df_new.interpolate(method='polynomial', order=1,inplace=True) ## reset index in case of polynomial with degree > 1
+    list_parameters = [c for c in list(df_new.columns) if c != 'datetime']
+    df_new.reset_index(drop=True,inplace=True)
+    for column in list_parameters:
+        df_temp = df_new.loc[:,column].interpolate(method='polynomial', order=1)
+        df_new.loc[:,column] = df_temp.values
+    # df_new.interpolate(method='polynomial', order=1,inplace=True) ## reset index in case of polynomial with degree > 1
+    
     ## incase NaNs are at begining or end we drop those rows
-
     df_new.dropna(axis=0,inplace=True)
-    # df_new.reset_index(drop=True,inplace=True)
+    df_new.reset_index(drop=True,inplace=True)
     return df_new
+
 #*************************************************
 def freeze(learn):
     '''
