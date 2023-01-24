@@ -40,12 +40,12 @@ def impute_NaN(df):
     '''interpolate or drop NaN
     '''
     df_new = df.copy()
-    df_new.reset_index(drop=True,inplace=True)
-    df_new.interpolate(method='polynomial', order=1,inplace=True)
+    # df_new.reset_index(drop=True,inplace=True)
+    df_new.interpolate(method='polynomial', order=1,inplace=True) ## reset index in case of polynomial with degree > 1
     ## incase NaNs are at begining or end we drop those rows
 
     df_new.dropna(axis=0,inplace=True)
-    df_new.reset_index(drop=True,inplace=True)
+    # df_new.reset_index(drop=True,inplace=True)
     return df_new
 #*************************************************
 def freeze(learn):
@@ -434,17 +434,17 @@ def under_sample(data, size ,seq_len,stride,sliding_mode='end'):
     x_list = []
     y_list = []
 
-   
-    data.reset_index(drop=True,inplace = True)
-    lc = data[(data.loc[:,'person']>0) | (data.loc[:,'window_open']>0)]
+    __data = data.copy()
+    __data.reset_index(drop=True,inplace = True)
+    lc = __data[(__data.loc[:,'person']>0) | (__data.loc[:,'window_open']>0)]
     indices = lc.index
 
     while (len(indices) > 0): 
         left = indices[0] # choose the most left index contains 1
         if left - size < 0: # outside values to avoid empty list from left
-            window = data.iloc[:left+size+1]
+            window = __data.iloc[:left+size+1]
         else:
-            window = data.iloc[left-size : left+size+1]
+            window = __data.iloc[left-size : left+size+1]
         #get features,targets for sliding
         f = window.drop(columns = ['person','window_open'])
         t = window.filter(['person','window_open'])      
@@ -456,13 +456,13 @@ def under_sample(data, size ,seq_len,stride,sliding_mode='end'):
         
         #drop selected window values, if count < window, finished undersampling
         try:
-            data = data.drop(index = range(0,left+size+1))
+            __data = __data.drop(index = range(0,left+size+1))
         except:
             break
-        data.reset_index(drop=True,inplace = True)
+        __data.reset_index(drop=True,inplace = True)
         
         #recalculate indices of 1s
-        lc = data[(data.loc[:,'person']>0) | (data.loc[:,'window_open']>0)]
+        lc = __data[(__data.loc[:,'person']>0) | (__data.loc[:,'window_open']>0)]
         indices = lc.index
         
     # convert lists to correct shape  for segmentation and standardization
@@ -473,6 +473,7 @@ def under_sample(data, size ,seq_len,stride,sliding_mode='end'):
         X= concat(X,x_list[i])
         y= concat(y,y_list[i])
 
+    del __data
     return X,y
     
 # *******************************
@@ -521,15 +522,16 @@ def plot_distribution(y_true,y_pred,name):
 
     if name == 'person': 
         plt.scatter(range(1,y_pred.shape[0]+1),y_pred,marker = '.', label='Predictions')
-        plt.scatter(range(1,y_true.shape[0]+1),y_true,marker = '.',label='Targets')
-
+        if y_true is not None:
+            plt.scatter(range(1,y_true.shape[0]+1),y_true,marker = '.',label='Targets')
         plt.yticks([0,1],['No person','People'])
     elif name == 'window': 
         plt.scatter(range(1,y_pred.shape[0]+1),y_pred,marker = '.', label='Predictions')
-        plt.scatter(range(1,y_true.shape[0]+1),y_true,marker = '.',label='Targets')
+        if y_true is not None:
+            plt.scatter(range(1,y_true.shape[0]+1),y_true,marker = '.',label='Targets')
         plt.yticks([0,1],['Closed','Open'])
 
-    plt.title(f'distribution of wrong prediction of class {name}')
+    plt.title(f'distribution of predictions of class {name}')
     plt.xlabel('Timeline')
     plt.legend()
     plt.show()

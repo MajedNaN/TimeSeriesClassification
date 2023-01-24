@@ -28,8 +28,8 @@ d1 = data1.copy()
 d2 = concat(data2,data3,data4,data5,data6,data7,data8,data9,data10)
 
 
-d1.reset_index(drop = True,inplace = True)
-d2.reset_index(drop = True,inplace = True)
+# d1.reset_index(drop = True,inplace = True)
+# d2.reset_index(drop = True,inplace = True)
 
 d1.columns=data1.columns
 d2.columns=data1.columns
@@ -48,7 +48,7 @@ window_open = d2.pop('window_open')
 d2.insert(last_index-1, 'window_open', window_open) 
 
 data = concat(d1,d2)
-data.reset_index(drop = True,inplace=True)
+# data.reset_index(drop = True,inplace=True)
 data.columns=d1.columns
 
 
