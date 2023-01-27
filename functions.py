@@ -168,6 +168,56 @@ def normalized_kl(p,q,weight = 0.1): #normalized KL
     return (1-norm_kl)    ### reverse values to represent a score
 
 # *******************************
+def plot_PR_curve_both(y_true,y_probas):
+    '''
+    Ploting PR curve function
+    '''
+    fig,(ax1,ax2)=plt.subplots(1,2,figsize=(15,5))
+    class_name = 'person'
+    precision, recall, thresholds_person = precision_recall_curve(y_true[:,0], y_probas[:,0])
+    ### replace zero precision and zero recall at same time to avoid infinity fscore 
+    zero_indices = np.where(((precision==0)==True) & ((recall==0)==True) == True)[0].tolist()
+    precision[zero_indices] = 0.00001
+    recall[zero_indices] = 0.00001
+    # convert to f score
+    fscore = (2 * precision * recall) / (precision + recall)
+    # locate the index of the largest f score
+    ix_person = np.argmax(fscore)
+    print('class: {class_name}: Best Threshold =%f, F1-Score =%.3f' % (thresholds_person[ix_person], thresholds_person[ix_person]))
+
+    ax1.plot(recall, precision, marker='.', label=f'PR-curve of class {class_name}')
+    ax1.scatter(recall[ix_person], precision[ix_person], marker='o', color='red', label='best threshold')
+    ax1.annotate(f'{thresholds_person[ix_person]:.4f}',xy = (recall[ix_person]-0.2, precision[ix_person]-0.1), color='red')
+    # axis labels
+    ax1.set_xlabel('Recall')
+    ax1.set_ylabel('Precision')
+    ax1.legend()
+    ###################################
+    class_name = 'window'
+    precision, recall, thresholds_window = precision_recall_curve(y_true[:,1], y_probas[:,1])
+    ### replace zero precision and zero recall at same time to avoid infinity fscore 
+    zero_indices = np.where(((precision==0)==True) & ((recall==0)==True) == True)[0].tolist()
+    precision[zero_indices] = 0.00001
+    recall[zero_indices] = 0.00001
+    # convert to f score
+    fscore = (2 * precision * recall) / (precision + recall)
+    # locate the index of the largest f score
+    ix_window = np.argmax(fscore)
+    print('class: {class_name}: Best Threshold =%f, F1-Score =%.3f' % (thresholds_window[ix_window], thresholds_window[ix_window]))
+
+    ax2.plot(recall, precision, marker='.', label=f'PR-curve of class {class_name}')
+    ax2.scatter(recall[ix_window], precision[ix_window], marker='o', color='red', label='best threshold')
+    ax2.annotate(f'{thresholds_window[ix_window]:.4f}',xy = (recall[ix_window]-0.2, precision[ix_window]-0.1), color='red')
+    # axis labels
+    ax2.set_xlabel('Recall')
+    ax2.set_ylabel('Precision')
+    ax2.legend()
+    ########################
+    # show the plot
+    plt.show()
+    return thresholds_person[ix_person], thresholds_window[ix_window]
+# *******************************
+
 def plot_PR_curve(class_name,y_true,y_probas):
     '''
     Ploting PR curve function
