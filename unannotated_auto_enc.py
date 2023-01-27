@@ -120,7 +120,7 @@ ind = np.arange(len(y_nmrs))  # the x locations for the groups
 bars = ax.bar(ind, y_nmrs, color="blue")
 ax.set_xticks(ind)
 ax.set_xticklabels(x_lbs, minor=False)
-plt.title('Distribution of datset')
+plt.title('Distribution of dataset')
 # plt.xlabel('x')
 # plt.ylabel('y')
 ax.bar_label(bars)
