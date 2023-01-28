@@ -597,7 +597,7 @@ def plot_distribution_both(y_true,y_pred,network):
     plot distribution of targets vs predictions in a given test set
     '''
 
-    fig,(ax1,ax2) = plt.subplots(2,1,figsize=(10,8))
+    fig,(ax1,ax2) = plt.subplots(2,1,figsize=(15,8))
     class_name = 'person'
     ax1.plot(range(1,y_pred.shape[0]+1),y_pred[:,0], label='Predictions')
     if y_true is not None:
