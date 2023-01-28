@@ -43,7 +43,7 @@ def impute_NaN(df):
     list_parameters = [c for c in list(df_new.columns) if c != 'datetime']
     df_new.reset_index(drop=True,inplace=True)
     for column in list_parameters:
-        df_temp = df_new.loc[:,column].interpolate(method='polynomial', order=1)
+        df_temp = df_new.loc[:,column].interpolate(method='linear')
         df_new.loc[:,column] = df_temp.values
     # df_new.interpolate(method='polynomial', order=1,inplace=True) ## reset index in case of polynomial with degree > 1
     
@@ -250,7 +250,7 @@ def plot_PR_curve(class_name,y_true,y_probas):
 
 
 # *******************************
-def visualize_embeddibgs(features, person_labels, window_labels,features_unannotated=None,unannotated_labels = None,combined=False,n_components = 2, method = 'pca'):
+def visualize_embeddibgs(network,features, person_labels, window_labels,features_unannotated=None,unannotated_labels = None,combined=False,n_components = 2, method = 'pca'):
     '''
     visualize embeddings using sklearn and plotly
     '''
@@ -313,7 +313,7 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
 
             fig3.update_layout(
             title={
-                'text': f'{name} of class Ununnotated data',
+                'text': f'{name} of class Ununnotated data for {network}',
                 'y':0.9,
                 'x':0.5,
                 'xanchor': 'center',
@@ -322,7 +322,7 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
 
     fig1.update_layout(
         title={
-            'text': f'{name} of class person {label}',
+            'text': f'{name} of class person {label} for {network}',
             'y':0.9,
             'x':0.5,
             'xanchor': 'center',
@@ -331,7 +331,7 @@ def visualize_embeddibgs(features, person_labels, window_labels,features_unannot
     
     fig2.update_layout(
         title={
-            'text': f'{name} of class window {label}',
+            'text': f'{name} of class window {label} for {network}',
             'y':0.9,
             'x':0.5,
             'xanchor': 'center',
@@ -590,7 +590,33 @@ def plot_distribution(y_true,y_pred,name):
     plt.xlabel('Timeline')
     plt.legend()
     plt.show()
+#*************************************************
 
+def plot_distribution_both(y_true,y_pred,network):
+    '''
+    plot distribution of targets vs predictions in a given test set
+    '''
+
+    fig,(ax1,ax2) = plt.subplots(2,1,figsize=(10,8))
+    class_name = 'person'
+    ax1.plot(range(1,y_pred.shape[0]+1),y_pred[:,0], label='Predictions')
+    if y_true is not None:
+        ax1.plot(range(1,y_true.shape[0]+1),y_true[:,0],label='Targets')
+    ax1.set_yticks([0,1],['No person','People'])
+    ax1.set_title(f'Distribution of predictions for {network}')
+    ax1.set_xlabel('Timeline')
+    ax1.legend()
+
+    class_name = 'window'
+    ax2.plot(range(1,y_pred.shape[0]+1),y_pred[:,1], label='Predictions')
+    if y_true is not None:
+        ax2.plot(range(1,y_true.shape[0]+1),y_true[:,1],label='Targets')
+    ax2.set_yticks([0,1],['Closed','Open'])
+    ax2.set_xlabel('Timeline')
+    ax2.legend()
+
+
+    plt.show()
 #*************************************************
 
 def plot_fp_fn(y_true,y_pred,name):
