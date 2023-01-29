@@ -45,7 +45,7 @@ X = np.empty((0,n_features, seq_len),dtype = np.float32)
 device_ids = df_chunks['deviceid_int'].unique()
 
 device_count = 0
-for device_id in device_ids:
+for device_id in device_ids[1:]: #exclude device 0 for testing later
     
     df_temp = df_chunks.loc[df_chunks['deviceid_int'] == device_id]
     df = (df_temp).drop(columns=['deviceid_int'])
@@ -74,6 +74,10 @@ splits = TrainValidTestSplitter(valid_size=0.01)(X[:,0,0]) ##### we DON'T have t
 # x_train = X[splits[0]]
 # x_valid = X[splits[1]]
 
+### save splits of training to calculate scalers later
+with open('splits_AE.yaml', 'w') as f:
+    yaml.dump(list(splits[0]), f)
+
 ## normalization for all devices
 x_train = np.zeros(X[splits[0]].shape,dtype=np.float32)
 x_valid = np.zeros(X[splits[1]].shape,dtype=np.float32)
@@ -84,6 +88,7 @@ for i in range(x_train.shape[1]): ## n_features
     x_train[:, i, :] = scalers[i].transform((X[splits[0]])[:, i, :].reshape(-1,1)).reshape(x_train.shape[0],x_train.shape[-1])
     x_valid[:, i, :] = scalers[i].transform((X[splits[1]])[:, i, :].reshape(-1,1)).reshape(x_valid.shape[0],x_valid.shape[-1])
 
+    
 ###training/validation dataloaders
 Tsets = TSDatasets(x_train, inplace=True)
 Vsets = TSDatasets(x_valid, inplace=True)

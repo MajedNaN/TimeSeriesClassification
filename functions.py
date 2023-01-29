@@ -2,6 +2,60 @@ from imports import *
 from archs import *
 
 #******************************************
+
+def smoothing_predictions(test_preds,pattern:list,epochs,error_max):
+    '''Smoothing predictions for max error 
+    '''
+    if type(test_preds)==torch.Tensor:
+        test_preds_smoothed = test_preds.clone()
+    else:
+        test_preds_smoothed = test_preds.copy()
+
+
+    for i in range (epochs):  #### as each new pattern after being removed may lead to previous pattern again
+        for j in range(1,error_max):  ### error  in a row
+            __pattern = pattern.copy() ### to be renewed next time
+            for i in range(j):
+                if pattern[0]==0: 
+                    __pattern.insert(-1,1) ### insert 1 before end  
+                else:
+                    __pattern.insert(-1,0) ### insert 0 before end
+            N = len(__pattern)
+
+            while (True):  ### to remove specific pattern again if it is produced from itself
+                possibles_person = np.where(test_preds_smoothed[:,0] == __pattern[0])[0]
+                possibles_window = np.where(test_preds_smoothed[:,1] == __pattern[0])[0]
+
+                solns_person = []
+                for p in possibles_person:
+                    check = list(test_preds_smoothed[:,0][p:p+N])
+                    if np.all(check == __pattern):
+                        solns_person.append(p)
+                        
+                solns_window = []
+                for p in possibles_window:
+                    check = list(test_preds_smoothed[:,1][p:p+N])
+                    if np.all(check == __pattern):
+                        solns_window.append(p)
+
+                idx = []
+                for i in range(1,N):
+                    if __pattern[i] != __pattern[0]:
+                        idx.append(i)
+
+                if len(solns_person) ==0 and len(solns_window)==0:
+                    break
+
+                for i in idx:
+                    if len(solns_person) >0:
+                        test_preds_smoothed[:,0][np.array(solns_person)+i] = __pattern[0]
+                    if len(solns_window) >0:
+                        test_preds_smoothed[:,1][np.array(solns_window)+i] = __pattern[0]
+        
+
+    return test_preds_smoothed
+
+#******************************************
 def encode_classes(data):
     '''Encode classes person and window into 0,1
     '''
