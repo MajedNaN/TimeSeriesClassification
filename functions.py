@@ -3,11 +3,24 @@ from archs import *
 
 #******************************************
 
-def smoothing_predictions(test_preds,pattern:list,epochs,error_max):
+def smoothing_predictions(test_preds,error_max,epochs):
+    '''Smoothing predictions for max error forward and backward, notice zero is passed first or one to other private function
+    '''
+    one = [1 for i in range(error_max+2)] ### error_max+1 as minimum correct and 1 for change after error_max
+    zero = [0 for i in range(error_max+2)]
+    #### forward direction
+    test_preds_smoothed = __smoothing_predictions(test_preds,one,error_max,epochs)
+    test_preds_smoothed = __smoothing_predictions(test_preds_smoothed,zero,error_max,epochs)
+    #### backward direction
+    test_preds_smoothed = __smoothing_predictions(np.flip(test_preds_smoothed),one,error_max,epochs)
+    test_preds_smoothed = np.flip(__smoothing_predictions(test_preds_smoothed,zero,error_max,epochs))
+    return test_preds_smoothed
+    
+def __smoothing_predictions(test_preds,pattern:list,error_max,epochs):
     '''Smoothing predictions for max error 
     '''
     if type(test_preds)==torch.Tensor:
-        test_preds_smoothed = test_preds.clone()
+        test_preds_smoothed = test_preds.clone().numpy()
     else:
         test_preds_smoothed = test_preds.copy()
 
@@ -23,6 +36,7 @@ def smoothing_predictions(test_preds,pattern:list,epochs,error_max):
             N = len(__pattern)
 
             while (True):  ### to remove specific pattern again if it is produced from itself
+                ### forward direction
                 possibles_person = np.where(test_preds_smoothed[:,0] == __pattern[0])[0]
                 possibles_window = np.where(test_preds_smoothed[:,1] == __pattern[0])[0]
 
@@ -51,7 +65,6 @@ def smoothing_predictions(test_preds,pattern:list,epochs,error_max):
                         test_preds_smoothed[:,0][np.array(solns_person)+i] = __pattern[0]
                     if len(solns_window) >0:
                         test_preds_smoothed[:,1][np.array(solns_window)+i] = __pattern[0]
-        
 
     return test_preds_smoothed
 
