@@ -3,20 +3,20 @@ from archs import *
 
 #******************************************
 
-def smoothing_predictions(test_preds,error_max,epochs):
+def smoothing_predictions(test_preds,error_max):
     '''Smoothing predictions for max error forward and backward, notice zero is passed first or one to other private function
     '''
-    one = [1 for i in range(error_max+2)] ### error_max+1 as minimum correct and 1 for change after error_max
-    zero = [0 for i in range(error_max+2)]
+    one = [1 for i in range(2)] 
+    zero = [0 for i in range(2)]
     #### forward direction
-    test_preds_smoothed = __smoothing_predictions(test_preds,one,error_max,epochs)
-    test_preds_smoothed = __smoothing_predictions(test_preds_smoothed,zero,error_max,epochs)
+    test_preds_smoothed = __smoothing_predictions(test_preds,one,error_max)
+    test_preds_smoothed = __smoothing_predictions(test_preds_smoothed,zero,error_max)
     #### backward direction
-    test_preds_smoothed = __smoothing_predictions(np.flip(test_preds_smoothed),one,error_max,epochs)
-    test_preds_smoothed = np.flip(__smoothing_predictions(test_preds_smoothed,zero,error_max,epochs))
+    # test_preds_smoothed = __smoothing_predictions(np.flip(test_preds_smoothed),one,error_max)
+    # test_preds_smoothed = np.flip(__smoothing_predictions(test_preds_smoothed,zero,error_max))
     return test_preds_smoothed
-    
-def __smoothing_predictions(test_preds,pattern:list,error_max,epochs):
+
+def __smoothing_predictions(test_preds,pattern:list,error_max):
     '''Smoothing predictions for max error 
     '''
     if type(test_preds)==torch.Tensor:
@@ -25,46 +25,40 @@ def __smoothing_predictions(test_preds,pattern:list,error_max,epochs):
         test_preds_smoothed = test_preds.copy()
 
 
-    for i in range (epochs):  #### as each new pattern after being removed may lead to previous pattern again
-        for j in range(1,error_max):  ### error  in a row
-            __pattern = pattern.copy() ### to be renewed next time
-            for i in range(j):
-                if pattern[0]==0: 
-                    __pattern.insert(-1,1) ### insert 1 before end  
-                else:
-                    __pattern.insert(-1,0) ### insert 0 before end
-            N = len(__pattern)
+    for j in range(1,error_max):  ### error  in a row
+        __pattern = pattern.copy() ### to be renewed next time
+        for i in range(j):
+            if pattern[0]==0: 
+                __pattern.insert(-1,1) ### insert 1 before end  
+            else:
+                __pattern.insert(-1,0) ### insert 0 before end
+        N = len(__pattern)
 
-            while (True):  ### to remove specific pattern again if it is produced from itself
-                ### forward direction
-                possibles_person = np.where(test_preds_smoothed[:,0] == __pattern[0])[0]
-                possibles_window = np.where(test_preds_smoothed[:,1] == __pattern[0])[0]
+        possibles_person = np.where(test_preds_smoothed[:,0] == __pattern[0])[0]
+        possibles_window = np.where(test_preds_smoothed[:,1] == __pattern[0])[0]
 
-                solns_person = []
-                for p in possibles_person:
-                    check = list(test_preds_smoothed[:,0][p:p+N])
-                    if np.all(check == __pattern):
-                        solns_person.append(p)
-                        
-                solns_window = []
-                for p in possibles_window:
-                    check = list(test_preds_smoothed[:,1][p:p+N])
-                    if np.all(check == __pattern):
-                        solns_window.append(p)
+        solns_person = []
+        for p in possibles_person:
+            check = list(test_preds_smoothed[:,0][p:p+N])
+            if np.all(check == __pattern):
+                solns_person.append(p)
+                
+        solns_window = []
+        for p in possibles_window:
+            check = list(test_preds_smoothed[:,1][p:p+N])
+            if np.all(check == __pattern):
+                solns_window.append(p)
 
-                idx = []
-                for i in range(1,N):
-                    if __pattern[i] != __pattern[0]:
-                        idx.append(i)
+        idx = []
+        for i in range(1,N): ### cause we have different error frames, to change in between error values
+            if __pattern[i] != __pattern[0]:
+                idx.append(i)
 
-                if len(solns_person) ==0 and len(solns_window)==0:
-                    break
-
-                for i in idx:
-                    if len(solns_person) >0:
-                        test_preds_smoothed[:,0][np.array(solns_person)+i] = __pattern[0]
-                    if len(solns_window) >0:
-                        test_preds_smoothed[:,1][np.array(solns_window)+i] = __pattern[0]
+        for i in idx:
+            if len(solns_person) >0:
+                test_preds_smoothed[:,0][np.array(solns_person)+i] = __pattern[0]
+            if len(solns_window) >0:
+                test_preds_smoothed[:,1][np.array(solns_window)+i] = __pattern[0]
 
     return test_preds_smoothed
 
