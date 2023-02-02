@@ -629,6 +629,58 @@ def plot_confusion(y_true,y_pred,n_classes,name):
     plt.show()
 
 #******************************************
+
+def plot_confusion_both(y_true,y_pred,n_classes):
+    '''plot confusion matrix function for both classes
+    '''
+    fig,(ax1,ax2)=plt.subplots(1,2,figsize=(13,6))
+
+    cf_matrix_person=confusion_matrix(y_true[:,0],y_pred[:,0])
+    cf_matrix_window=confusion_matrix(y_true[:,1],y_pred[:,1])
+
+    ## person
+    group_counts = ["{0:0.0f}".format(value) for value in cf_matrix_person.flatten()]
+
+    group_percentages = ["{0:.2%}".format(value) for value in cf_matrix_person.flatten()/np.sum(cf_matrix_person)]
+
+    labels = [f"{v1}\n{v2}\n" for v1, v2 in zip(group_counts,group_percentages)]
+
+    labels = np.asarray(labels).reshape(n_classes,n_classes)  # 2: number of classes
+
+    sns.heatmap(cf_matrix_person, annot=labels, fmt='', cmap='Blues',cbar = False, ax =ax1)
+    ax1.set_title(f'Confusion Matrix of class person\n')
+    ax1.set_xlabel('\nPredicted Classes')
+    ax1.set_ylabel('Actual Classes ')
+
+# Ticket labels - List must be in alphabetical order
+    ax1.xaxis.set_ticklabels(['No person','People']) ### names of classes starting from 0
+    ax1.yaxis.set_ticklabels(['No person','People'])
+
+
+    ### window
+
+    group_counts = ["{0:0.0f}".format(value) for value in cf_matrix_window.flatten()]
+
+    group_percentages = ["{0:.2%}".format(value) for value in cf_matrix_window.flatten()/np.sum(cf_matrix_window)]
+
+    labels = [f"{v1}\n{v2}\n" for v1, v2 in zip(group_counts,group_percentages)]
+
+    labels = np.asarray(labels).reshape(n_classes,n_classes)  # 2: number of classes
+
+    sns.heatmap(cf_matrix_window, annot=labels, fmt='', cmap='Blues',cbar = False,ax =ax2)
+    ax2.set_title(f'Confusion Matrix of class window\n')
+    ax2.set_xlabel('\nPredicted Classes')
+    ax2.set_ylabel('Actual Classes ')
+
+# Ticket labels - List must be in alphabetical order
+    ax2.xaxis.set_ticklabels(['Closed','Open']) ### names of classes starting from 0
+    ax2.yaxis.set_ticklabels(['Closed','Open'])
+
+
+
+## Display the visualization of the Confusion Matrix.
+    plt.show()
+#******************************************
 def plot_distribution(y_true,y_pred,name):
     '''
     plot distribution of targets vs predictions in a given test set
