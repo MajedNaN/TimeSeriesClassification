@@ -633,7 +633,7 @@ def plot_confusion(y_true,y_pred,n_classes,name):
 def plot_confusion_both(y_true,y_pred,n_classes):
     '''plot confusion matrix function for both classes
     '''
-    fig,(ax1,ax2)=plt.subplots(1,2,figsize=(13,6))
+    fig,(ax1,ax2)=plt.subplots(1,2,figsize=(9,4))
 
     cf_matrix_person=confusion_matrix(y_true[:,0],y_pred[:,0])
     cf_matrix_window=confusion_matrix(y_true[:,1],y_pred[:,1])
